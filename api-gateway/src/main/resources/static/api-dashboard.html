@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Management API Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .service-card.gateway {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .service-card.gateway h2,
+        .service-card.gateway p,
+        .service-card.gateway .endpoints {
+            color: white;
+        }
+
+        .service-card.gateway .endpoints {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .service-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .endpoints {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .test-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        #test-results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-up {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-down {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .services {
+                grid-template-columns: 1fr;
+            }
+
+            .test-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🏢 Asset Management System</h1>
+        <p class="subtitle">API Gateway & Service Dashboard</p>
+    </header>
+
+    <div class="services">
+        <div class="service-card gateway">
+            <span class="service-icon">🚪</span>
+            <h2>API Gateway</h2>
+            <p>Central routing point for all services. All API requests pass through here.</p>
+            <div class="endpoints">
+                <strong>Gateway Endpoints:</strong><br>
+                • GET /api/gateway/health<br>
+                • GET /api/gateway/services<br>
+                • GET /api/gateway/swagger-urls
+            </div>
+            <div class="btn-group">
+                <a href="/swagger-ui.html" class="btn" target="_blank">Gateway Swagger UI</a>
+                <a href="/api/gateway/health" class="btn btn-outline" target="_blank">Health Check</a>
+            </div>
+        </div>
+
+        <div class="service-card">
+            <span class="service-icon">🔐</span>
+            <h2>Auth Service <span class="status status-up" id="auth-status">Checking...</span></h2>
+            <p>Authentication and authorization service with JWT token generation.</p>
+            <div class="endpoints">
+                <strong>Auth Endpoints:</strong><br>
+                • POST /api/auth/login<br>
+                • GET /api/auth/health<br>
+                • GET /api/auth/me
+            </div>
+            <div class="btn-group">
+                <a href="/auth-swagger-ui/" class="btn" target="_blank">Auth Swagger UI</a>
+                <a href="http://localhost:8083/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/auth/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
+
+        <div class="service-card">
+            <span class="service-icon">📊</span>
+            <h2>Asset Service <span class="status status-up" id="asset-status">Checking...</span></h2>
+            <p>Asset management with PostgreSQL database and role-based access.</p>
+            <div class="endpoints">
+                <strong>Asset Endpoints:</strong><br>
+                • GET /api/assets<br>
+                • POST /api/assets<br>
+                • GET /api/assets/health
+            </div>
+            <div class="btn-group">
+                <a href="/asset-swagger-ui/" class="btn" target="_blank">Asset Swagger UI</a>
+                <a href="http://localhost:8084/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/assets/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔧 Quick API Tests</h3>
+        <div class="test-buttons">
+            <button onclick="testGateway()" class="btn">Test Gateway</button>
+            <button onclick="testAuth()" class="btn btn-success">Test Auth Service</button>
+            <button onclick="testAsset()" class="btn btn-success">Test Asset Service</button>
+            <button onclick="testLogin()" class="btn">Test Login</button>
+        </div>
+        <div id="test-results">Click any test button to see results...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>📚 Quick Access Links</h3>
+        <div class="btn-group">
+            <a href="/" class="btn">Home Dashboard</a>
+            <a href="/swagger-ui.html" class="btn" target="_blank">Gateway Swagger</a>
+            <a href="/auth-swagger-ui/" class="btn btn-success" target="_blank">Auth Swagger</a>
+            <a href="/asset-swagger-ui/" class="btn btn-success" target="_blank">Asset Swagger</a>
+            <a href="/api/gateway/services" class="btn btn-outline" target="_blank">All Services</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Asset Management System v1.0.0 | Spring Boot 3.1.5 | Running on: http://localhost:8082</p>
+        <p>Services: Auth(8083), Asset(8084), Keycloak(8080)</p>
+    </footer>
+</div>
+
+<script>
+    // Check services status on load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkGatewayStatus();
+        checkAuthStatus();
+        checkAssetStatus();
+    });
+
+    async function checkGatewayStatus() {
+        try {
+            const response = await fetch('/api/gateway/health');
+            const data = await response.json();
+            document.getElementById('gateway-status').innerHTML = 'Gateway Status: <span class="status status-up">UP ✓</span>';
+        } catch (error) {
+            document.getElementById('gateway-status').innerHTML = 'Gateway Status: <span class="status status-down">DOWN ✗</span>';
+        }
+    }
+
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/auth/health');
+            const data = await response.json();
+            document.getElementById('auth-status').textContent = 'UP ✓';
+            document.getElementById('auth-status').className = 'status status-up';
+        } catch (error) {
+            document.getElementById('auth-status').textContent = 'DOWN ✗';
+            document.getElementById('auth-status').className = 'status status-down';
+        }
+    }
+
+    async function checkAssetStatus() {
+        try {
+            const response = await fetch('/api/assets/health');
+            const text = await response.text();
+            document.getElementById('asset-status').textContent = 'UP ✓';
+            document.getElementById('asset-status').className = 'status status-up';
+        } catch (error) {
+            document.getElementById('asset-status').textContent = 'DOWN ✗';
+            document.getElementById('asset-status').className = 'status status-down';
+        }
+    }
+
+    async function testGateway() {
+        try {
+            const response = await fetch('/api/gateway/health');
+            const data = await response.json();
+            showResult('Gateway Test', data);
+        } catch (error) {
+            showResult('Gateway Test', { error: error.message });
+        }
+    }
+
+    async function testAuth() {
+        try {
+            const response = await fetch('/api/auth/health');
+            const data = await response.json();
+            showResult('Auth Service Test', data);
+        } catch (error) {
+            showResult('Auth Service Test', { error: error.message });
+        }
+    }
+
+    async function testAsset() {
+        try {
+            const response = await fetch('/api/assets/health');
+            const text = await response.text();
+            showResult('Asset Service Test', { response: text });
+        } catch (error) {
+            showResult('Asset Service Test', { error: error.message });
+        }
+    }
+
+    async function testLogin() {
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: 'admin',
+                    password: 'admin123'
+                })
+            });
+            const data = await response.json();
+            showResult('Login Test', data);
+        } catch (error) {
+            showResult('Login Test', { error: error.message });
+        }
+    }
+
+    function showResult(testName, result) {
+        const resultsDiv = document.getElementById('test-results');
+        const timestamp = new Date().toLocaleTimeString();
+        resultsDiv.innerHTML = `
+                <strong>${testName} - ${timestamp}</strong>
+                <pre>${JSON.stringify(result, null, 2)}</pre>
+                <hr>
+                ${resultsDiv.innerHTML}
+            `;
+    }
+</script>
+</body>
+</html>

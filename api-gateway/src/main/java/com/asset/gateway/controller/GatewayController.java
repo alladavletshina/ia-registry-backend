@@ -42,34 +42,36 @@ public class GatewayController {
                 "url", "http://localhost:8082",
                 "swagger", "http://localhost:8082/swagger-ui.html",
                 "api-docs", "http://localhost:8082/api-docs",
-                "health", "http://localhost:8082/api/gateway/health"
+                "health", "http://localhost:8082/api/gateway/health",
+                "dashboard", "http://localhost:8082/"
         ));
 
-        // Проверяем доступность других сервисов
-        services.put("auth", checkService("Auth Service", "http://localhost:8083", "http://localhost:8082/auth-api-docs"));
-        services.put("asset", checkService("Asset Service", "http://localhost:8084", "http://localhost:8082/asset-api-docs"));
+        services.put("auth", Map.of(
+                "name", "Auth Service",
+                "url", "http://localhost:8083",
+                "gatewayDocs", "http://localhost:8082/auth-api-docs",
+                "swagger", "http://localhost:8082/auth-swagger-ui/",
+                "directSwagger", "http://localhost:8083/swagger-ui.html",
+                "health", "http://localhost:8082/api/auth/health"
+        ));
+
+        services.put("asset", Map.of(
+                "name", "Asset Service",
+                "url", "http://localhost:8084",
+                "gatewayDocs", "http://localhost:8082/asset-api-docs",
+                "swagger", "http://localhost:8082/asset-swagger-ui/",
+                "directSwagger", "http://localhost:8084/swagger-ui.html",
+                "health", "http://localhost:8082/api/assets/health"
+        ));
+
+        services.put("keycloak", Map.of(
+                "name", "Keycloak",
+                "url", "http://localhost:8080",
+                "admin", "http://localhost:8080/admin",
+                "credentials", "admin / admin123"
+        ));
 
         return ResponseEntity.ok(services);
-    }
-
-    private Map<String, Object> checkService(String name, String url, String gatewayDocsUrl) {
-        Map<String, Object> service = new LinkedHashMap<>();
-        service.put("name", name);
-        service.put("url", url);
-        service.put("gatewayDocs", gatewayDocsUrl);
-        service.put("swagger", url + "/swagger-ui.html");
-
-        // Простая проверка доступности
-        try {
-            // В реальном приложении можно использовать WebClient для проверки
-            service.put("status", "UNKNOWN");
-            service.put("message", "Use gateway endpoints for access");
-        } catch (Exception e) {
-            service.put("status", "ERROR");
-            service.put("message", e.getMessage());
-        }
-
-        return service;
     }
 
     @GetMapping("/swagger-urls")
@@ -77,7 +79,8 @@ public class GatewayController {
         return ResponseEntity.ok(Map.of(
                 "gateway", Map.of(
                         "swagger-ui", "http://localhost:8082/swagger-ui.html",
-                        "api-docs", "http://localhost:8082/api-docs"
+                        "api-docs", "http://localhost:8082/api-docs",
+                        "dashboard", "http://localhost:8082/"
                 ),
                 "auth", Map.of(
                         "swagger-ui", "http://localhost:8082/auth-swagger-ui/",
@@ -89,7 +92,6 @@ public class GatewayController {
                         "api-docs", "http://localhost:8082/asset-api-docs",
                         "direct", "http://localhost:8084/swagger-ui.html"
                 ),
-                "aggregated", true,
                 "timestamp", System.currentTimeMillis()
         ));
     }

@@ -37,10 +37,10 @@ public class AggregatedSwaggerConfig {
                             3. **Asset Service** (`/api/assets/**`) - asset management
                             
                             ### How to use:
-                            1. Authorize via **Auth Service** → `POST /api/auth/login`
-                            2. Copy JWT token
-                            3. Click **Authorize** and paste: `Bearer <your_token>`
-                            4. Test **Asset Service** endpoints
+                            1. Open dropdown in top-right corner to select service
+                            2. **Auth Service** - endpoints start with `/api/auth/`
+                            3. **Asset Service** - endpoints start with `/api/assets/`
+                            4. **Gateway** - endpoints start with `/api/gateway/`
                             """)
                         .version("1.0.0")
                         .contact(new Contact()
@@ -67,11 +67,15 @@ public class AggregatedSwaggerConfig {
 
         servers.add(new Server()
                 .url("http://localhost:8082")
-                .description("Local development"));
+                .description("Local development (Gateway)"));
 
         servers.add(new Server()
-                .url("http://api-gateway:8082")
-                .description("Inside Docker network"));
+                .url("http://auth-service:8083")
+                .description("Auth Service (direct)"));
+
+        servers.add(new Server()
+                .url("http://asset-service:8084")
+                .description("Asset Service (direct)"));
 
         return servers;
     }
