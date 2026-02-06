@@ -7,13 +7,13 @@ echo "Setting up Keycloak..."
 sleep 10
 
 # Получаем токен администратора
-TOKEN=$(curl -s -X POST http://localhost:8081/realms/master/protocol/openid-connect/token \
+TOKEN=$(curl -s -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin&password=admin123&grant_type=password&client_id=admin-cli" \
   | jq -r '.access_token')
 
 # Создаем Realm
-curl -X POST http://localhost:8081/admin/realms \
+curl -X POST http://localhost:8080/admin/realms \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -22,7 +22,7 @@ curl -X POST http://localhost:8081/admin/realms \
   }'
 
 # Создаем клиента для бэкенда
-curl -X POST http://localhost:8081/admin/realms/asset-management/clients \
+curl -X POST http://localhost:8080/admin/realms/asset-management/clients \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -33,18 +33,18 @@ curl -X POST http://localhost:8081/admin/realms/asset-management/clients \
   }'
 
 # Создаем роли
-curl -X POST http://localhost:8081/admin/realms/asset-management/roles \
+curl -X POST http://localhost:8080/admin/realms/asset-management/roles \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name": "admin"}'
 
-curl -X POST http://localhost:8081/admin/realms/asset-management/roles \
+curl -X POST http://localhost:8080/admin/realms/asset-management/roles \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name": "user"}'
 
 # Создаем пользователя admin
-curl -X POST http://localhost:8081/admin/realms/asset-management/users \
+curl -X POST http://localhost:8080/admin/realms/asset-management/users \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

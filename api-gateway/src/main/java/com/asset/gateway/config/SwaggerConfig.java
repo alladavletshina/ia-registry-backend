@@ -1,4 +1,4 @@
-// ./api-gateway/src/main/java/com/asset/gateway/config/SwaggerConfig.java
+// api-gateway/src/main/java/com/asset/gateway/config/SwaggerConfig.java
 package com.asset.gateway.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
@@ -6,7 +6,9 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.Components;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,9 +16,6 @@ import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
-
-    @Value("${spring.application.name}")
-    private String appName;
 
     @Bean
     public OpenAPI gatewayOpenAPI() {
@@ -41,13 +40,22 @@ public class SwaggerConfig {
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("http://springdoc.org")))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                        )
+                )
                 .servers(List.of(
                         new Server()
                                 .url("http://localhost:8082")
                                 .description("Local Development Server"),
                         new Server()
-                                .url("http://api.asset-management.com")
-                                .description("Production Server")
+                                .url("http://api-gateway:8082")
+                                .description("Docker Internal")
                 ));
     }
 }

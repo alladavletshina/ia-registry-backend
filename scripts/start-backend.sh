@@ -89,7 +89,7 @@ echo ""
 echo "=== Backend is ready! ==="
 echo ""
 echo "Services:"
-echo "- Keycloak: http://localhost:8081"  # Изменено с 8080 на 8081 согласно docker-compose
+echo "- Keycloak: http://localhost:8080"
 echo "- API Gateway: http://localhost:8082"
 echo "- Auth Service: http://localhost:8083"
 echo "- Asset Service: http://localhost:8084"
