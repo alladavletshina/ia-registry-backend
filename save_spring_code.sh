@@ -25,6 +25,7 @@ EXCLUDE_PATTERNS=(
     "*.swo"
     "*.pyc"
     "*.pyo"
+    "Dockerfile"
 )
 
 # Директории для исключения
