@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class AssetController {
             }
             """);
     }
+
 
     @GetMapping("/db-check")
     public ResponseEntity<?> dbCheck() {
