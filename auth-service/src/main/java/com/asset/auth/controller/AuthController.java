@@ -1,5 +1,6 @@
 package com.asset.auth.controller;
 
+import org.springframework.beans.factory.annotation.Value; // ВАЖНО: Добавить этот импорт
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -12,17 +13,36 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080", "http://localhost:8082"})
 public class AuthController {
+
+    // Эти аннотации требуют импорта org.springframework.beans.factory.annotation.Value
+    @Value("${keycloak.url:http://localhost:8180}")
+    private String keycloakBaseUrl;
+
+    @Value("${keycloak.realm:asset-management}")
+    private String realm;
+
+    @Value("${keycloak.client-id:asset-backend}")
+    private String clientId;
+
+    @Value("${keycloak.client-secret:backend-secret}")
+    private String clientSecret;
+
+    @Value("${keycloak.enabled:true}")
+    private boolean keycloakEnabled;
+
+    @Value("${auth.fallback.enabled:false}")
+    private boolean fallbackEnabled;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        System.out.println("🚀 LOGIN STARTED");
-        System.out.println("Username: " + credentials.get("username"));
+        System.out.println("🚀 LOGIN STARTED for user: " + credentials.get("username"));
 
         String username = credentials.get("username");
         String password = credentials.get("password");
 
-        // Проверяем тестовые учетные данные
+        // Проверка тестовых учетных данных
         boolean isTestAdmin = "admin".equals(username) && "admin123".equals(password);
         boolean isTestUser = "user".equals(username) && "user123".equals(password);
 
@@ -30,68 +50,68 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
 
-        try {
-            // Пробуем получить токен от Keycloak
-            String url = "http://keycloak:8080/realms/asset-management/protocol/openid-connect/token";
-            System.out.println("Calling Keycloak URL: " + url);
+        // Пробуем получить токен от Keycloak
+        if (keycloakEnabled) {
+            try {
+                String url = keycloakBaseUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+                System.out.println("📞 Calling Keycloak: " + url);
 
-            // Создаем параметры
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("client_id", "asset-backend");
-            params.add("client_secret", "backend-secret");
-            params.add("username", username);
-            params.add("password", password);
-            params.add("grant_type", "password");
-            params.add("scope", "openid");
+                MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+                params.add("client_id", clientId);
+                params.add("client_secret", clientSecret);
+                params.add("username", username);
+                params.add("password", password);
+                params.add("grant_type", "password");
+                params.add("scope", "openid");
 
-            System.out.println("Parameters: client_id=asset-backend, username=" + username);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            // Настраиваем запрос
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+                RestTemplate restTemplate = new RestTemplate();
 
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+                ResponseEntity<Map> response = restTemplate.exchange(
+                        url, HttpMethod.POST, request, Map.class);
 
-            // Отправляем
-            RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    url, HttpMethod.POST, request, Map.class);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    Map<String, Object> tokenData = response.getBody();
+                    System.out.println("✅ SUCCESS! Got token from Keycloak");
 
-            System.out.println("Response status: " + response.getStatusCode());
-
-            if (response.getStatusCode() == HttpStatus.OK) {
-                Map<String, Object> tokenData = response.getBody();
-                System.out.println("✅ SUCCESS! Got token from Keycloak");
-
-                // Проверяем, что это JWT токен
-                String accessToken = (String) tokenData.get("access_token");
-                if (accessToken != null && accessToken.split("\\.").length == 3) {
-                    System.out.println("✅ Token is valid JWT with 3 parts");
-                    System.out.println("Token preview: " + accessToken.substring(0, Math.min(50, accessToken.length())) + "...");
+                    return buildSuccessResponse(tokenData, "SUCCESS - Real JWT token from Keycloak");
+                } else {
+                    System.out.println("❌ Keycloak returned error: " + response.getStatusCode());
                 }
-
-                // Возвращаем ответ
-                Map<String, Object> result = new HashMap<>();
-                result.put("accessToken", accessToken);
-                result.put("refreshToken", tokenData.get("refresh_token"));
-                result.put("expiresIn", tokenData.get("expires_in"));
-                result.put("tokenType", tokenData.get("token_type"));
-                result.put("scope", tokenData.get("scope"));
-                result.put("message", "SUCCESS - Real JWT token from Keycloak");
-
-                return ResponseEntity.ok(result);
-            } else {
-                System.out.println("❌ Keycloak returned error: " + response.getStatusCode());
-                System.out.println("Body: " + response.getBody());
+            } catch (Exception e) {
+                System.out.println("❌ Keycloak error: " + e.getMessage());
+                e.printStackTrace();
             }
-
-        } catch (Exception e) {
-            System.out.println("❌ EXCEPTION when calling Keycloak: " + e.getMessage());
-            System.out.println("Exception type: " + e.getClass().getName());
         }
 
-        // Fallback - тестовый режим
-        System.out.println("⚠️ Using fallback test mode");
+        // Fallback режим
+        if (fallbackEnabled) {
+            System.out.println("⚠️ Using fallback test mode");
+            return buildFallbackResponse(username);
+        }
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("error", "Authentication service unavailable"));
+    }
+
+    private ResponseEntity<Map<String, Object>> buildSuccessResponse(
+            Map<String, Object> tokenData, String message) {
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", tokenData.get("access_token"));
+        result.put("refreshToken", tokenData.get("refresh_token"));
+        result.put("expiresIn", tokenData.get("expires_in"));
+        result.put("tokenType", tokenData.get("token_type"));
+        result.put("scope", tokenData.get("scope"));
+        result.put("message", message);
+
+        return ResponseEntity.ok(result);
+    }
+
+    private ResponseEntity<Map<String, Object>> buildFallbackResponse(String username) {
         Map<String, Object> result = new HashMap<>();
         result.put("accessToken", "test-jwt-token-" + username + "-" + System.currentTimeMillis());
         result.put("refreshToken", "test-refresh-token-" + username + "-" + System.currentTimeMillis());
@@ -103,55 +123,6 @@ public class AuthController {
         result.put("warning", "Using test mode because Keycloak is not accessible");
 
         return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader,
-                                    @RequestBody(required = false) Map<String, String> requestBody) {
-        System.out.println("👋 LOGOUT request");
-
-        try {
-            if (requestBody != null && requestBody.containsKey("refreshToken")) {
-                String refreshToken = requestBody.get("refreshToken");
-
-                // Пробуем отозвать токен в Keycloak
-                try {
-                    String revokeUrl = "http://keycloak:8080/realms/asset-management/protocol/openid-connect/revoke";
-
-                    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-                    params.add("client_id", "asset-backend");
-                    params.add("client_secret", "backend-secret");
-                    params.add("token", refreshToken);
-                    params.add("token_type_hint", "refresh_token");
-
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-                    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-
-                    RestTemplate restTemplate = new RestTemplate();
-                    ResponseEntity<String> response = restTemplate.postForEntity(revokeUrl, request, String.class);
-
-                    if (response.getStatusCode() == HttpStatus.OK) {
-                        System.out.println("✅ Token revoked in Keycloak");
-                    }
-                } catch (Exception e) {
-                    System.out.println("⚠️ Could not revoke token in Keycloak: " + e.getMessage());
-                }
-            }
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Logout successful",
-                    "timestamp", System.currentTimeMillis()
-            ));
-
-        } catch (Exception e) {
-            System.out.println("❌ Error during logout: " + e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "message", "Logout completed (simulated)",
-                    "timestamp", System.currentTimeMillis()
-            ));
-        }
     }
 
     @GetMapping("/me")

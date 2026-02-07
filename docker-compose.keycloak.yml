@@ -41,13 +41,24 @@ services:
 
   # Auth Service
   auth-service:
-    build: ./auth-service
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
     ports:
       - "8083:8083"
     environment:
-      KEYCLOAK_URL: http://keycloak:8080
+      - PROFILE=docker
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_ENABLED=true
+      - AUTH_FALLBACK_ENABLED=false
     depends_on:
       - keycloak
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/api/auth/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Asset Service
   asset-service:
