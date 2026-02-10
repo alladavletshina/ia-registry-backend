@@ -1,0 +1,26 @@
+notification-service:
+  build: ./notification-service
+  ports:
+    - "8087:8087"
+  environment:
+    KEYCLOAK_URL: http://keycloak:8080
+    DB_URL: jdbc:postgresql://postgres-notifications:5432/notifications
+    SMTP_HOST: smtp.gmail.com
+    SMTP_PORT: 587
+    EMAIL_USER: your-email@gmail.com
+    EMAIL_PASSWORD: your-password
+    WEBSOCKET_ENABLED: true
+  depends_on:
+    - keycloak
+    - postgres-notifications
+
+postgres-notifications:
+  image: postgres:15
+  environment:
+    POSTGRES_DB: notifications
+    POSTGRES_USER: notifications
+    POSTGRES_PASSWORD: notifications123
+  ports:
+    - "5437:5432"
+  volumes:
+    - postgres_notifications_data:/var/lib/postgresql/data

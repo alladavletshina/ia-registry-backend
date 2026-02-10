@@ -1,0 +1,25 @@
+task-service:
+  build: ./task-service
+  ports:
+    - "8086:8086"
+  environment:
+    KEYCLOAK_URL: http://keycloak:8080
+    DB_URL: jdbc:postgresql://postgres-tasks:5432/tasks
+    ASSET_SERVICE_URL: http://asset-service:8084
+    USER_SERVICE_URL: http://user-service:8085
+  depends_on:
+    - keycloak
+    - postgres-tasks
+    - asset-service
+    - user-service
+
+postgres-tasks:
+  image: postgres:15
+  environment:
+    POSTGRES_DB: tasks
+    POSTGRES_USER: tasks
+    POSTGRES_PASSWORD: tasks123
+  ports:
+    - "5436:5432"
+  volumes:
+    - postgres_tasks_data:/var/lib/postgresql/data

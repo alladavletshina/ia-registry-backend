@@ -1,0 +1,14 @@
+report-service:
+  build: ./report-service
+  ports:
+    - "8089:8089"
+  environment:
+    KEYCLOAK_URL: http://keycloak:8080
+    ASSET_SERVICE_URL: http://asset-service:8084
+    USER_SERVICE_URL: http://user-service:8085
+    TASK_SERVICE_URL: http://task-service:8086
+  depends_on:
+    - keycloak
+    - asset-service
+    - user-service
+    - task-service

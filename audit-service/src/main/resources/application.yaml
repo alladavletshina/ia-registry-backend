@@ -1,0 +1,22 @@
+audit-service:
+  build: ./audit-service
+  ports:
+    - "8088:8088"
+  environment:
+    KEYCLOAK_URL: http://keycloak:8080
+    DB_URL: jdbc:postgresql://postgres-audit:5432/audit_logs
+    LOG_RETENTION_DAYS: 365
+  depends_on:
+    - keycloak
+    - postgres-audit
+
+postgres-audit:
+  image: postgres:15
+  environment:
+    POSTGRES_DB: audit_logs
+    POSTGRES_USER: audit
+    POSTGRES_PASSWORD: audit123
+  ports:
+    - "5438:5432"
+  volumes:
+    - postgres_audit_data:/var/lib/postgresql/data
