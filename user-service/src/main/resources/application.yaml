@@ -40,6 +40,7 @@ spring:
 keycloak:
   auth-server-url: ${KEYCLOAK_URL:http://keycloak:8080}
   realm: ${KEYCLOAK_REALM:master}
+  target-realm: ${KEYCLOAK_REALM:asset-management}
   admin:
     username: ${KEYCLOAK_ADMIN_USER:admin}
     password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}

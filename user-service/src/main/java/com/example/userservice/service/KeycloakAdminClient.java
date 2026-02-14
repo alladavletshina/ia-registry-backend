@@ -21,12 +21,12 @@ public class KeycloakAdminClient {
 
     private final Keycloak keycloak;
 
-    @Value("${keycloak.realm}")
-    private String realm;
+    @Value("${keycloak.target-realm}")
+    private String targetRealm;
 
     public String createUser(String email, String password, String firstName, String lastName){
         try {
-            RealmResource realmResource = keycloak.realm(realm);
+            RealmResource realmResource = keycloak.realm(targetRealm);
             UsersResource usersResource = realmResource.users();
 
             UserRepresentation user = new UserRepresentation();
@@ -73,7 +73,7 @@ public class KeycloakAdminClient {
 
     public void updateUser(String userId, String firstName, String lastName, String email) {
         try {
-            RealmResource realmResource = keycloak.realm(realm);
+            RealmResource realmResource = keycloak.realm(targetRealm);
             UsersResource usersResource = realmResource.users();
 
             UserRepresentation user = usersResource.get(userId).toRepresentation();
@@ -92,7 +92,7 @@ public class KeycloakAdminClient {
 
     public void setUserPassword(String userId, String password){
         try{
-            RealmResource realmResource = keycloak.realm(realm);
+            RealmResource realmResource = keycloak.realm(targetRealm);
             UsersResource usersResource = realmResource.users();
 
             CredentialRepresentation credential = new CredentialRepresentation();
@@ -110,7 +110,7 @@ public class KeycloakAdminClient {
 
     public boolean userExists(String email) {
         try {
-            RealmResource realmResource = keycloak.realm("asset-management");
+            RealmResource realmResource = keycloak.realm(targetRealm);
             UsersResource usersResource = realmResource.users();
 
             return usersResource.search(email, true).size() > 0;
@@ -128,7 +128,7 @@ public class KeycloakAdminClient {
 
     public void deleteUser(String userId) {
         try {
-            RealmResource realmResource = keycloak.realm(realm);
+            RealmResource realmResource = keycloak.realm(targetRealm);
             UsersResource usersResource = realmResource.users();
 
             usersResource.get(userId).remove();
