@@ -38,12 +38,12 @@ spring:
           issuer-uri: http://keycloak:8080/realms/asset-management
           jwk-set-uri: http://keycloak:8080/realms/asset-management/protocol/openid-connect/certs
 keycloak:
-  auth-server-url: http://keycloak:8080
-  realm: master
+  auth-server-url: ${KEYCLOAK_URL:http://keycloak:8080}
+  realm: ${KEYCLOAK_REALM:master}
   admin:
-    username: admin
-    password: admin123
-    client-id: admin-cli
+    username: ${KEYCLOAK_ADMIN_USER:admin}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin123}
+    client-id: ${KEYCLOAK_CLIENT_ID:admin-cli}
 
 logging:
   level:

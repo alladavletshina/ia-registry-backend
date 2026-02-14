@@ -28,11 +28,11 @@ public class KeycloakConfig {
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
-                .serverUrl("http://keycloak:8080")
-                .realm("master")
-                .username("admin")
-                .password("admin123")
-                .clientId("admin-cli")
+                .serverUrl(serverUrl)
+                .realm(realm)
+                .username(adminUsername)
+                .password(adminPassword)
+                .clientId(clientId)
                 .grantType(OAuth2Constants.PASSWORD)
                 .build();
     }
