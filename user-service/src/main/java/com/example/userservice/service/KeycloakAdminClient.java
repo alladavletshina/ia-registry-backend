@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -38,7 +39,13 @@ public class KeycloakAdminClient {
             user.setRequiredActions(Collections.singletonList("VERIFY_EMAIL"));
 
             //Создаем пользователя
+            ObjectMapper objectMapper = new ObjectMapper();
+            log.info("Sending to Keycloak: {}", objectMapper.writeValueAsString(user));
+
             Response response = usersResource.create(user);
+
+            log.info("Response status: {}, body: {}", response.getStatus(),
+                    response.readEntity(String.class));
 
             if(response.getStatus() != 201) {
                 String errorBody = response.readEntity(String.class);
@@ -55,7 +62,7 @@ public class KeycloakAdminClient {
             setUserPassword(userId, password);
 
             //Отправляем письмо с подтверждением email
-            usersResource.get(userId).sendVerifyEmail();
+            //usersResource.get(userId).sendVerifyEmail();
 
             return userId;
         } catch (Exception e) {
@@ -103,7 +110,7 @@ public class KeycloakAdminClient {
 
     public boolean userExists(String email) {
         try {
-            RealmResource realmResource = keycloak.realm(realm);
+            RealmResource realmResource = keycloak.realm("asset-management");
             UsersResource usersResource = realmResource.users();
 
             return usersResource.search(email, true).size() > 0;

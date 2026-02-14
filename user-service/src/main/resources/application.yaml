@@ -14,27 +14,44 @@ spring:
       maximum-pool-size: 10
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          batch_size: 20
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
 
   security:
     oauth2:
       resourceserver:
         jwt:
-          # ?????????? 8081, ??? ??? Keycloak ??????????? ?? 8081:8080
+          # Keycloak ???????? ?????? Docker ???? ?? ????? 8080
+          # ?? ????? ?? ??????????? ?? 8081, ?? ?????? ??????????? ?????????? 8080
           issuer-uri: http://keycloak:8080/realms/asset-management
           jwk-set-uri: http://keycloak:8080/realms/asset-management/protocol/openid-connect/certs
+keycloak:
+  auth-server-url: http://keycloak:8080
+  realm: master
+  admin:
+    username: admin
+    password: admin123
+    client-id: admin-cli
 
 logging:
   level:
     org.springframework: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type: TRACE
     org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    com.company.user: DEBUG
 
 springdoc:
   api-docs:

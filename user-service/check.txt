@@ -1,0 +1,8 @@
+# Зайди в PostgreSQL
+docker exec -it asset-management-backend-postgres-users-1 psql -U users -d users
+
+# Посмотри таблицы
+\dt
+
+# Должна быть таблица users и flyway_schema_history
+SELECT * FROM flyway_schema_history;
