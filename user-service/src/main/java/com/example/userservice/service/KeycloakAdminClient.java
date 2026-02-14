@@ -35,8 +35,10 @@ public class KeycloakAdminClient {
             user.setFirstName(firstName);
             user.setLastName(lastName);
             user.setEnabled(true);
-            user.setEmailVerified(false);
-            user.setRequiredActions(Collections.singletonList("VERIFY_EMAIL"));
+            user.setEmailVerified(true);
+
+            //добавлю позже верификацию через почту
+            //user.setRequiredActions(Collections.singletonList("VERIFY_EMAIL"));
 
             //Создаем пользователя
             ObjectMapper objectMapper = new ObjectMapper();
