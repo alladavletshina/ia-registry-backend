@@ -64,7 +64,7 @@ services:
 
   # Asset Service
   asset-service:
-    build: ./asset-service
+    build: asset-service
     ports:
       - "8084:8084"
     environment:
