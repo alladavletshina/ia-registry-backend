@@ -90,4 +90,18 @@ public class AssetController {
         return ResponseEntity.ok(updated);
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Удалить актив", description = "Только для администраторов")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Актив успешно удалён"),
+            @ApiResponse(responseCode = "404", description = "Актив не найден"),
+            @ApiResponse(responseCode = "401", description = "Неавторизован"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён")
+    })
+    public ResponseEntity<Void> deleteAsset(@PathVariable long id){
+
+        assetService.deleteAsset(id);
+        return ResponseEntity.noContent().build();
+    }
 }

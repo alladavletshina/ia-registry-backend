@@ -6,8 +6,10 @@ import com.example.assetservice.dto.CreateAssetRequest;
 import com.example.assetservice.repository.AssetRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -91,4 +93,11 @@ public class AssetService {
         return mapToResponse(asset);
     }
 
+    @Transactional
+    public void deleteAsset(Long id) {
+        if (!assetRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Актив с id " + id + " не найден");
+        }
+        assetRepository.deleteById(id);
+    }
 }
