@@ -1,11 +1,15 @@
 package com.example.assetservice.service;
 
+import com.example.assetservice.dto.AssetResponse;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
 import com.example.assetservice.repository.AssetRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,5 +33,31 @@ public class AssetService {
         asset.setTags(request.getTags());
 
         return assetRepository.save(asset);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AssetResponse> getAllAssets() {
+        return assetRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private AssetResponse mapToResponse(Asset asset) {
+        AssetResponse response = new AssetResponse();
+        response.setId(asset.getId());
+        response.setName(asset.getName());
+        response.setCategory(asset.getCategory());
+        response.setOwnerId(asset.getOwnerId());
+        response.setStatus(asset.getStatus());
+        response.setConfidentiality(asset.getConfidentiality());
+        response.setIntegrity(asset.getIntegrity());
+        response.setAvailability(asset.getAvailability());
+        response.setLastReview(asset.getLastReview());
+        response.setDescription(asset.getDescription());
+        response.setLocation(asset.getLocation());
+        response.setTags(asset.getTags());
+        response.setCreatedAt(asset.getCreatedAt());
+        response.setUpdatedAt(asset.getUpdatedAt());
+        return response;
     }
 }
