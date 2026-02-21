@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class AssetController {
     private final AssetService assetService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Создать новый актив", description = "Только для администраторов")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Актив успешно создан",
@@ -42,6 +44,7 @@ public class AssetController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Получить список всех активов")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Список активов",
@@ -55,6 +58,7 @@ public class AssetController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Получить актив по ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Актив найден",
@@ -69,6 +73,7 @@ public class AssetController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Обновить актив", description = "Полное обновление всех полей")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Актив обновлён",

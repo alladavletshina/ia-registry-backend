@@ -25,14 +25,9 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/assets/health",
-            "/api/assets",
             "/api/assets/actuator/health",
             "/actuator/health",
             "/actuator/info",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/api-docs/**",
-            "/v3/api-docs/**"
     };
 
     @Bean
@@ -43,11 +38,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Публичные эндпоинты (не требуют токена)
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/assets/**").hasRole("admin")
                         .requestMatchers(HttpMethod.GET, "/api/assets/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/assets/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/assets/**").hasRole("admin")
 
                         // Эндпоинты для администраторов
-                        .requestMatchers("/api/asset/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/asset/admin/**").hasRole("admin")
 
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
