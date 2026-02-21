@@ -6,6 +6,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,11 +24,12 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // Публичные эндпоинты (оставим для фильтрации, но лучше использовать web.ignoring)
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/assets/health",
             "/api/assets/actuator/health",
             "/actuator/health",
-            "/actuator/info",
+            "/actuator/info"
     };
 
     @Bean
@@ -36,17 +38,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Публичные эндпоинты (не требуют токена)
+                        // Публичные эндпоинты (если не попали в web.ignoring)
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/assets/**").hasRole("admin")
                         .requestMatchers(HttpMethod.GET, "/api/assets/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/assets/**").hasRole("admin")
                         .requestMatchers(HttpMethod.PUT, "/api/assets/**").hasRole("admin")
-
-                        // Эндпоинты для администраторов
                         .requestMatchers("/api/asset/admin/**").hasRole("admin")
-
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
@@ -58,6 +56,24 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+
+                "/swagger-ui/**",
+                "/api-docs/**",
+                "/swagger-ui.html",
+
+                // Actuator health endpoints
+                "/actuator/health",
+                "/actuator/info",
+                "/api/assets/health",
+                "/api/assets/actuator/health",
+
+                "/error"
+        );
     }
 
     @Bean
@@ -75,21 +91,14 @@ class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAut
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
-        // Получаем realm_access из токена
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");
-
         if (realmAccess == null || realmAccess.isEmpty()) {
             return Collections.emptyList();
         }
-
-        // Получаем список ролей
         List<String> roles = (List<String>) realmAccess.get("roles");
-
         if (roles == null || roles.isEmpty()) {
             return Collections.emptyList();
         }
-
-        // Конвертируем роли в GrantedAuthority (добавляем префикс ROLE_)
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
