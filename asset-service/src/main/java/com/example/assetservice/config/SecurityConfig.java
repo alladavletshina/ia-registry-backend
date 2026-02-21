@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Публичные эндпоинты (не требуют токена)
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/assets/**").permitAll()
 
                         // Эндпоинты для администраторов
                         .requestMatchers("/api/asset/admin/**").hasRole("ADMIN")

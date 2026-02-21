@@ -33,4 +33,12 @@ public class AssetController {
         List<AssetResponse> assets = assetService.getAllAssets();
         return ResponseEntity.ok(assets);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AssetResponse> getAssetById(@PathVariable long id) {
+
+        AssetResponse asset = assetService.getAssetById(id);
+        return ResponseEntity.ok(asset);
+    }
+
 }

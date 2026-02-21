@@ -60,4 +60,10 @@ public class AssetService {
         response.setUpdatedAt(asset.getUpdatedAt());
         return response;
     }
+
+    public AssetResponse getAssetById(long id) {
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("Asset not found with id: " + id));
+        return mapToResponse(asset);
+    }
 }
