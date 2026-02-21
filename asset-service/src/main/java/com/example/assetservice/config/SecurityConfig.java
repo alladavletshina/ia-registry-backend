@@ -49,6 +49,8 @@ public class SecurityConfig {
                         // Эндпоинты для администраторов
                         .requestMatchers("/api/asset/admin/**").hasRole("ADMIN")
 
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
                 )
