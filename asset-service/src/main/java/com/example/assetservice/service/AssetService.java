@@ -100,4 +100,11 @@ public class AssetService {
         }
         assetRepository.deleteById(id);
     }
+
+    public List<AssetResponse> getAssetByOwnerId(String ownerId) {
+
+        return assetRepository.findAllByOwnerId(ownerId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 }

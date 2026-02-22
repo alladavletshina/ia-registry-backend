@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -108,7 +110,11 @@ public class AssetController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Получить активы, принадлежащие текущему пользователю", description = "Только для пользователей")
-    public String getMyAssets() {
-        return "some code";
+    public ResponseEntity<List<AssetResponse>> getMyAssets(@AuthenticationPrincipal Jwt jwt) {
+
+        String ownerId = jwt.getSubject();
+        List<AssetResponse> assets = assetService.getAssetByOwnerId(ownerId);
+        return ResponseEntity.ok(assets);
+
     }
 }
