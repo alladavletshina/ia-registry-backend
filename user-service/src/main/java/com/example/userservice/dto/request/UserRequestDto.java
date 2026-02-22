@@ -16,7 +16,7 @@ public class UserRequestDto {
     private String position;
     private String department;
     private Boolean active;
-//    private String role;
+    private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

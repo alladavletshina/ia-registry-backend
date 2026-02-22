@@ -43,6 +43,7 @@ public class UserService {
         user.setPhone(request.getPhone());
         user.setPosition(request.getPosition());
         user.setDepartment(request.getDepartment());
+        user.setRole("USER");
         user.setStatus(UserStatus.PENDING);
         user.setCreatedAt(LocalDateTime.now());
 
@@ -112,6 +113,7 @@ public class UserService {
                 .position(user.getPosition())
                 .department(user.getDepartment())
                 .active(UserStatus.ACTIVE.equals(user.getStatus()))
+                .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
@@ -159,11 +161,11 @@ public class UserService {
         if (request.getDepartment() != null) {
             user.setDepartment(request.getDepartment());
         }
-//        if (request.getRole() != null) {
-//            user.setRole(request.getRole());
-//            // Если роль хранится в Keycloak, обновить её там
-//            // keycloakClient.updateUserRole(user.getKeycloakId(), request.getRole());
-//        }
+        if (request.getRole() != null) {
+            user.setRole(request.getRole());
+            // Если роль хранится в Keycloak, обновить её там
+            // keycloakClient.updateUserRole(user.getKeycloakId(), request.getRole());
+        }
         if (request.getActive() != null) {
             user.setStatus(request.getActive() ? UserStatus.ACTIVE : UserStatus.BLOCKED);
             // Если нужно, можно также деактивировать в Keycloak (например, отключить пользователя)

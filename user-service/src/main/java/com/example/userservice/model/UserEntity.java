@@ -38,6 +38,8 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
+    private String role;
+
     @Column(name = "error_message")
     private String errorMessage;
 

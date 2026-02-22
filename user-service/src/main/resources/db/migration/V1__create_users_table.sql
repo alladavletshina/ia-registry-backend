@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(100),
     phone VARCHAR(20),
     position VARCHAR(100),
+    role VARCHAR(100),
     department VARCHAR(100),
     status VARCHAR(50) NOT NULL,
     error_message TEXT,

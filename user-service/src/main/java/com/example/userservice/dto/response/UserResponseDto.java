@@ -22,7 +22,8 @@ public class UserResponseDto {
     private String phone;
     private String position;
     private String department;
-    private boolean active;
+    private Boolean active;
+    private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
