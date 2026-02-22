@@ -24,7 +24,7 @@ public class OpenAPIConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
                 .info(new Info()
-                        .title("Asset Service API")
+                        .title("User Service API")
                         .description("API для управления пользователями")
                         .version("1.0.0"));
     }

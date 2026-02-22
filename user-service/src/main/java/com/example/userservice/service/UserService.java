@@ -1,11 +1,13 @@
 package com.example.userservice.service;
 
 import com.example.userservice.dto.request.RegisterRequestDto;
+import com.example.userservice.dto.request.UserRequestDto;
 import com.example.userservice.dto.response.UserResponseDto;
 import com.example.userservice.model.UserEntity;
 import com.example.userservice.model.UserStatus;
 import com.example.userservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -125,5 +127,52 @@ public class UserService {
         UserEntity user = userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден с keycloakId: " + keycloakId));
         return mapToDto(user);
+    }
+
+    public UserResponseDto updateUser(UUID id, @Valid UserRequestDto request) {
+
+        // 1. Найти пользователя
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден с id: " + id));
+
+        // 2. Проверить уникальность email, если он меняется
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email " + request.getEmail() + " уже используется");
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        // 3. Обновить остальные поля (если они переданы)
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getPosition() != null) {
+            user.setPosition(request.getPosition());
+        }
+        if (request.getDepartment() != null) {
+            user.setDepartment(request.getDepartment());
+        }
+//        if (request.getRole() != null) {
+//            user.setRole(request.getRole());
+//            // Если роль хранится в Keycloak, обновить её там
+//            // keycloakClient.updateUserRole(user.getKeycloakId(), request.getRole());
+//        }
+        if (request.getActive() != null) {
+            user.setStatus(request.getActive() ? UserStatus.ACTIVE : UserStatus.BLOCKED);
+            // Если нужно, можно также деактивировать в Keycloak (например, отключить пользователя)
+            // keycloakClient.enableUser(user.getKeycloakId(), request.getIsActive());
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        UserEntity updatedUser = userRepository.save(user);
+        return mapToDto(updatedUser);
+
     }
 }

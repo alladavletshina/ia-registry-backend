@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.request.UserRequestDto;
 import com.example.userservice.dto.response.UserResponseDto;
 import com.example.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,17 +9,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -61,5 +62,23 @@ public class UserController {
         log.info("Запрос текущего пользователя по keycloakId: {}", keycloakId);
         UserResponseDto user = userService.getUserByKeycloakId(keycloakId);
         return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Обновить данные пользователя (админ)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь обновлён",
+                    content = @Content(schema = @Schema(implementation = UserResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные (например, email уже занят)"),
+            @ApiResponse(responseCode = "401", description = "Неавторизован"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещён"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "500", description = "Внутренняя ошибка")
+    })
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable UUID id,
+                                                      @Valid @RequestBody UserRequestDto request) {
+        UserResponseDto updated = userService.updateUser(id, request);
+        return ResponseEntity.ok(updated);
     }
 }

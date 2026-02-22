@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/**").permitAll()
 
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
