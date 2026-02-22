@@ -8,10 +8,14 @@ import com.example.userservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -90,6 +94,13 @@ public class UserService {
 
     }
 
+    public List<UserResponseDto> getAllUsers() {
+        List<UserEntity> users =  userRepository.findAll();
+        return users.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     private UserResponseDto mapToDto(UserEntity user) {
         return UserResponseDto.builder()
                 .id(user.getId())
@@ -102,6 +113,19 @@ public class UserService {
                 .department(user.getDepartment())
                 .active(UserStatus.ACTIVE.equals(user.getStatus()))
                 .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    public UserResponseDto getUserByEmail(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден с email: " + email));
+        return mapToDto(user);
+    }
+
+    public UserResponseDto getUserByKeycloakId(String keycloakId) {
+        UserEntity user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден с keycloakId: " + keycloakId));
+        return mapToDto(user);
     }
 }

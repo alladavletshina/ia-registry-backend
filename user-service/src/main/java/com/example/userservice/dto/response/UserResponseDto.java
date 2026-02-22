@@ -24,4 +24,5 @@ public class UserResponseDto {
     private String department;
     private boolean active;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -104,4 +104,11 @@ public class AssetController {
         assetService.deleteAsset(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Получить активы, принадлежащие текущему пользователю", description = "Только для пользователей")
+    public String getMyAssets() {
+        return "some code";
+    }
 }

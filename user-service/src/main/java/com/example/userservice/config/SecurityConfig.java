@@ -47,6 +47,7 @@ public class SecurityConfig {
                         // Эндпоинты для администраторов
                         .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
 
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
