@@ -46,6 +46,14 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Получить данные по пользователю по id", description = "Только для администраторов")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
+        UserResponseDto user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Получить информацию о текущем пользователе")

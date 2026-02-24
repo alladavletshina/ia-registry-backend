@@ -177,4 +177,12 @@ public class UserService {
         return mapToDto(updatedUser);
 
     }
+
+    public UserResponseDto getUserById(UUID id) {
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден с id: " + id));
+
+        return mapToDto(user);
+    }
 }
