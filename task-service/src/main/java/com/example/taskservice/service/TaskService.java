@@ -12,6 +12,7 @@ import com.example.taskservice.repository.TaskRepository;
 import com.example.taskservice.repository.TaskSpecifications;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,6 +30,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class TaskService {
 
     private final TaskRepository taskRepository;
@@ -147,13 +149,12 @@ public class TaskService {
 
     public Page<TaskDto> findTasks(TaskStatus status, TaskPriority priority, TaskType type,
                                    String search, Long assetId, UUID assignedTo, LocalDate dueDateFrom,
-                                   LocalDate dueDateTo, Pageable pageable, Jwt jwt) {
+                                   LocalDate dueDateTo, Pageable pageable, Jwt jwt, UUID userId) {
 
-            UUID currentUserTd = extractUserId(jwt);
             boolean isAdmin = hasAdminRole(jwt);
 
-            if (!isAdmin) {
-                assignedTo = currentUserTd;
+            if (! isAdmin) {
+                assignedTo = userId;
             }
 
             Specification<Task> spec = Specification

@@ -7,7 +7,6 @@ import com.example.taskservice.model.request.TaskCreateDto;
 import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
 import com.example.taskservice.model.statistics.TaskStatsDto;
-import com.example.taskservice.repository.TaskRepository;
 import com.example.taskservice.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,7 +39,6 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
-    private final TaskRepository taskRepository;
 
     @Operation(summary = "Получить статистику по задачам текущего пользователя (для админа — общую)")
     @ApiResponses(value = {
@@ -134,11 +132,12 @@ public class TaskController {
             @Parameter(description = "Срок выполнения от") @RequestParam(required = false) LocalDate dueDateFrom,
             @Parameter(description = "Срок выполнения до") @RequestParam(required = false) LocalDate dueDateTo,
             @PageableDefault(size = 20, sort = "dueDate", direction = Sort.Direction.ASC) Pageable pageable,
+            @Parameter(description = "ИД клиента") @RequestParam(required = false) UUID userId,
             @AuthenticationPrincipal Jwt jwt
             ) {
                 Page<TaskDto> tasks = taskService.findTasks(status, priority, type,
                         search, assetId, assignedTo, dueDateFrom,
-                        dueDateTo, pageable, jwt);
+                        dueDateTo, pageable, jwt, userId);
                 return ResponseEntity.ok(tasks);
     }
 }
