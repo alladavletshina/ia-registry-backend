@@ -7,6 +7,7 @@ import com.example.taskservice.model.request.TaskCreateDto;
 import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
 import com.example.taskservice.model.statistics.TaskStatsDto;
+import com.example.taskservice.repository.TaskRepository;
 import com.example.taskservice.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +40,7 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskRepository taskRepository;
 
     @Operation(summary = "Получить статистику по задачам текущего пользователя (для админа — общую)")
     @ApiResponses(value = {

@@ -13,18 +13,23 @@ import java.util.UUID;
 
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
 
-    /*Подсчёт задач по исполнителю*/
-    long countByAssignedTo(UUID targetUserId);
+    // Для администратора: считаем все задачи по статусу
+    long countByStatus(TaskStatus status);
 
-    /*Подсчёт задач по статусу и исполнителю (если assignedTo == null — считаем все)*/
-    @Query("SELECT COUNT(t) FROM Task t WHERE " +
-            "(:assignedTo IS NULL OR t.assignedTo = :assignedTo) AND t.status = :status")
-    long countByStatusAndAssignedTo(@Param("status") TaskStatus status,
-                                    @Param("assignedTo") UUID assignedTo);
+    // Для администратора: считаем все просроченные задачи (dueDate < today и статус не COMPLETED)
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.status <> 'COMPLETED' AND t.dueDate < :today")
+    long countOverdueAll(@Param("today") LocalDate today);
 
-    /*Подсчёт просроченных задач (dueDate < today и статус не COMPLETED)*/
-    @Query("SELECT COUNT(t) FROM Task t WHERE " +
-            "(:assignedTo IS NULL OR t.assignedTo = :assignedTo) " +
-            "AND t.status <> 'COMPLETED' AND t.dueDate < :today")
-    long countOverdue(@Param("assignedTo") UUID assignedTo, @Param("today") LocalDate today);
+    // Для обычного пользователя: считаем его задачи по статусу
+    long countByStatusAndAssignedTo(TaskStatus status, UUID assignedTo);
+
+    // Для обычного пользователя: считаем его просроченные задачи
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo = :assignedTo AND t.status <> 'COMPLETED' AND t.dueDate < :today")
+    long countOverdueForUser(@Param("assignedTo") UUID assignedTo, @Param("today") LocalDate today);
+
+    // Для администратора: общее количество задач
+    long count();
+
+    // Для обычного пользователя: количество его задач
+    long countByAssignedTo(UUID assignedTo);
 }

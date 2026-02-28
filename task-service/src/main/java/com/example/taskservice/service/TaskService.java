@@ -35,7 +35,6 @@ public class TaskService {
 
     public TaskDto getTaskById(long id, Jwt jwt) {
         Task task = findTaskOrThrow(id);
-        checkAccess(task, jwt);
         return mapToDto(task);
     }
 
@@ -170,16 +169,26 @@ public class TaskService {
     }
 
     public TaskStatsDto getStats(Jwt jwt) {
-
         UUID currentUserId = extractUserId(jwt);
         boolean isAdmin = hasAdminRole(jwt);
-        UUID targetUserId = isAdmin ? null : currentUserId;
 
-        long total = taskRepository.countByAssignedTo(targetUserId);
-        long pending = taskRepository.countByStatusAndAssignedTo(TaskStatus.PENDING, targetUserId);
-        long inProgress = taskRepository.countByStatusAndAssignedTo(TaskStatus.IN_PROGRESS, targetUserId);
-        long completed = taskRepository.countByStatusAndAssignedTo(TaskStatus.COMPLETED, targetUserId);
-        long overdue = taskRepository.countOverdue(targetUserId, LocalDate.now());
+        long total, pending, inProgress, completed, overdue;
+
+        if (isAdmin) {
+            /* Для администратора — считаем все задачи */
+            total = taskRepository.count();
+            pending = taskRepository.countByStatus(TaskStatus.PENDING);
+            inProgress = taskRepository.countByStatus(TaskStatus.IN_PROGRESS);
+            completed = taskRepository.countByStatus(TaskStatus.COMPLETED);
+            overdue = taskRepository.countOverdueAll(LocalDate.now());
+        } else {
+            /* Для обычного пользователя — считаем только его задачи*/
+            total = taskRepository.countByAssignedTo(currentUserId);
+            pending = taskRepository.countByStatusAndAssignedTo(TaskStatus.PENDING, currentUserId);
+            inProgress = taskRepository.countByStatusAndAssignedTo(TaskStatus.IN_PROGRESS, currentUserId);
+            completed = taskRepository.countByStatusAndAssignedTo(TaskStatus.COMPLETED, currentUserId);
+            overdue = taskRepository.countOverdueForUser(currentUserId, LocalDate.now());
+        }
 
         return new TaskStatsDto(total, pending, inProgress, completed, overdue);
     }
