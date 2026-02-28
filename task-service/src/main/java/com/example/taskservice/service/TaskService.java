@@ -3,6 +3,7 @@ package com.example.taskservice.service;
 import com.example.taskservice.model.Task;
 import com.example.taskservice.model.TaskStatus;
 import com.example.taskservice.model.request.TaskCreateDto;
+import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
 import com.example.taskservice.repository.TaskRepository;
 import jakarta.validation.Valid;
@@ -101,4 +102,41 @@ public class TaskService {
         Task saved = taskRepository.save(task);
         return mapToDto(saved);
     }
+
+    public void deleteTask(long id) {
+
+        if(!taskRepository.existsById(id)) {
+            throw new RuntimeException("Task not found with id: " + id);
+        }
+        taskRepository.deleteById(id);
+    }
+
+    public TaskDto updateTask(long id, TaskUpdateDto dto, Jwt jwt) {
+
+        Task task = findTaskOrThrow(id);
+        checkAccess(task, jwt);
+
+        boolean isAdmin = hasAdminRole(jwt);
+
+        if (dto.getTitle() != null) task.setTitle(dto.getTitle());
+        if (dto.getDescription() != null) task.setDescription(dto.getDescription());
+        if (dto.getPriority() != null) task.setPriority(dto.getPriority());
+        if (dto.getType() != null) task.setType(dto.getType());
+        if (dto.getStatus() != null) task.setStatus(dto.getStatus());
+        if (dto.getDueDate() != null) task.setDueDate(dto.getDueDate());
+        if (dto.getEstimatedTime() != null) task.setEstimatedTime(dto.getEstimatedTime());
+        if (dto.getTags() != null) task.setTags(dto.getTags());
+        if (dto.getAssetId() != null) task.setAssetId(dto.getAssetId());
+        if (dto.getAssetName() != null) task.setAssetName(dto.getAssetName());
+
+        if(dto.getAssignedTo() != null) {
+            if (! isAdmin) {
+                throw new AccessDeniedException("Only admin can reassign task");
+            }
+        } task.setAssignedTo(dto.getAssignedTo());
+
+        task.setUpdatedAt(LocalDate.now());
+        return mapToDto(task);
+    }
+
 }

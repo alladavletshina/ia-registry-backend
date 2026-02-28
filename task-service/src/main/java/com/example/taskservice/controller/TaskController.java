@@ -1,9 +1,11 @@
 package com.example.taskservice.controller;
 
 import com.example.taskservice.model.request.TaskCreateDto;
+import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
 import com.example.taskservice.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -69,4 +71,34 @@ public class TaskController {
                 return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @Operation(summary = "Удалить задачу (только для админа)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Задача удалена"),
+            @ApiResponse(responseCode = "404", description = "Задача не найдена"),
+            @ApiResponse(responseCode = "403", description = "Нет прав")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<Void> deleteTask(
+            @Parameter(description = "ID задачи", required = true) @PathVariable long id
+    ) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Частично обновить задачу (например, изменить статус)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Задача обновлена"),
+            @ApiResponse(responseCode = "404", description = "Задача не найдена"),
+            @ApiResponse(responseCode = "403", description = "Нет прав")
+    })
+    @PatchMapping("/{id}")
+    public ResponseEntity<TaskDto> updateTask (
+            @Parameter(description = "ID задачи", required = true) @PathVariable long id,
+            @RequestBody TaskUpdateDto patchDto,
+            @AuthenticationPrincipal Jwt jwt
+            ) {
+              TaskDto updated = taskService.updateTask(id,patchDto, jwt);
+              return ResponseEntity.ok(updated);
+    }
 }
