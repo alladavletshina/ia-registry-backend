@@ -1,8 +1,12 @@
 package com.example.taskservice.controller;
 
+import com.example.taskservice.model.TaskPriority;
+import com.example.taskservice.model.TaskStatus;
+import com.example.taskservice.model.TaskType;
 import com.example.taskservice.model.request.TaskCreateDto;
 import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
+import com.example.taskservice.model.statistics.TaskStatsDto;
 import com.example.taskservice.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,12 +17,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -34,8 +45,9 @@ public class TaskController {
             @ApiResponse(responseCode = "200", description = "Статистика")
     })
     @GetMapping("/stats")
-    public String getStats() {
-        return "TO BE code";
+    public ResponseEntity<TaskStatsDto> getStats(@AuthenticationPrincipal Jwt jwt) {
+        TaskStatsDto stats = taskService.getStats(jwt);
+        return ResponseEntity.ok(stats);
     }
 
     @Operation(summary = "Получить заявку по ID")
@@ -100,5 +112,31 @@ public class TaskController {
             ) {
               TaskDto updated = taskService.updateTask(id,patchDto, jwt);
               return ResponseEntity.ok(updated);
+    }
+
+
+    @Operation(summary = "Получить список задач с фильтрацией и пагинацией",
+            description = "Возвращает страницу задач, отфильтрованных по параметрам. Для обычного пользователя видны только его задачи.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Успешно"),
+            @ApiResponse(responseCode = "401", description = "Не авторизован", content = @Content)
+    })
+    @GetMapping
+    public ResponseEntity<Page<TaskDto>> getTasks(
+            @Parameter(description = "Статус задачи") @RequestParam(required = false) TaskStatus status,
+            @Parameter(description = "Приоритет") @RequestParam(required = false) TaskPriority priority,
+            @Parameter(description = "Тип задачи") @RequestParam(required = false) TaskType type,
+            @Parameter(description = "Поиск по названию, описанию, тегам") @RequestParam(required = false) String search,
+            @Parameter(description = "ID актива") @RequestParam(required = false) Long assetId,
+            @Parameter(description = "ID исполнителя (только для админа)") @RequestParam(required = false) UUID assignedTo,
+            @Parameter(description = "Срок выполнения от") @RequestParam(required = false) LocalDate dueDateFrom,
+            @Parameter(description = "Срок выполнения до") @RequestParam(required = false) LocalDate dueDateTo,
+            @PageableDefault(size = 20, sort = "dueDate", direction = Sort.Direction.ASC) Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt
+            ) {
+                Page<TaskDto> tasks = taskService.findTasks(status, priority, type,
+                        search, assetId, assignedTo, dueDateFrom,
+                        dueDateTo, pageable, jwt);
+                return ResponseEntity.ok(tasks);
     }
 }

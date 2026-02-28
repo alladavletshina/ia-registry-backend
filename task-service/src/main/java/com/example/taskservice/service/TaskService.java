@@ -1,13 +1,20 @@
 package com.example.taskservice.service;
 
 import com.example.taskservice.model.Task;
+import com.example.taskservice.model.TaskPriority;
 import com.example.taskservice.model.TaskStatus;
+import com.example.taskservice.model.TaskType;
 import com.example.taskservice.model.request.TaskCreateDto;
 import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
+import com.example.taskservice.model.statistics.TaskStatsDto;
 import com.example.taskservice.repository.TaskRepository;
+import com.example.taskservice.repository.TaskSpecifications;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -139,4 +146,41 @@ public class TaskService {
         return mapToDto(task);
     }
 
+    public Page<TaskDto> findTasks(TaskStatus status, TaskPriority priority, TaskType type,
+                                   String search, Long assetId, UUID assignedTo, LocalDate dueDateFrom,
+                                   LocalDate dueDateTo, Pageable pageable, Jwt jwt) {
+
+            UUID currentUserTd = extractUserId(jwt);
+            boolean isAdmin = hasAdminRole(jwt);
+
+            if (!isAdmin) {
+                assignedTo = currentUserTd;
+            }
+
+            Specification<Task> spec = Specification
+                .where(TaskSpecifications.byStatus(status))
+                .and(TaskSpecifications.byPriority(priority))
+                .and(TaskSpecifications.byType(type))
+                .and(TaskSpecifications.byAssetId(assetId))
+                .and(TaskSpecifications.byAssignedTo(assignedTo))
+                .and(TaskSpecifications.byDueDateBetween(dueDateFrom, dueDateTo))
+                .and(TaskSpecifications.search(search));
+
+            return taskRepository.findAll(spec, pageable).map(this::mapToDto);
+    }
+
+    public TaskStatsDto getStats(Jwt jwt) {
+
+        UUID currentUserId = extractUserId(jwt);
+        boolean isAdmin = hasAdminRole(jwt);
+        UUID targetUserId = isAdmin ? null : currentUserId;
+
+        long total = taskRepository.countByAssignedTo(targetUserId);
+        long pending = taskRepository.countByStatusAndAssignedTo(TaskStatus.PENDING, targetUserId);
+        long inProgress = taskRepository.countByStatusAndAssignedTo(TaskStatus.IN_PROGRESS, targetUserId);
+        long completed = taskRepository.countByStatusAndAssignedTo(TaskStatus.COMPLETED, targetUserId);
+        long overdue = taskRepository.countOverdue(targetUserId, LocalDate.now());
+
+        return new TaskStatsDto(total, pending, inProgress, completed, overdue);
+    }
 }
