@@ -29,6 +29,9 @@ public class SecurityConfig {
             "/api/notifications/health",
             "/api/notifications/actuator/health",
             "/actuator/health",
+            "/ws/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**",
             "/actuator/info"
     };
 
