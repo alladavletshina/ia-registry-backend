@@ -5,6 +5,7 @@ import com.example.notificationservice.model.NotificationCreateDto;
 import com.example.notificationservice.model.NotificationDto;
 import com.example.notificationservice.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -15,10 +16,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
 
+    @Transactional(readOnly = true)
     public Page<NotificationDto> getUserNotifications(UUID keyclockId, boolean unreadOnly, Pageable pageable) {
         Page<Notification> page;
         if(Boolean.TRUE.equals(unreadOnly)) {
@@ -29,32 +32,12 @@ public class NotificationService {
         return page.map(this::mapToDo);
     }
 
-
-
-    private NotificationDto mapToDo(Notification notification) {
-        NotificationDto dto = new NotificationDto();
-        dto.setId(notification.getId());
-        dto.setKeyclockId(notification.getKeyclockId());
-        dto.setType(notification.getType());
-        dto.setTitle(notification.getTitle());
-        dto.setMessage(notification.getMessage());
-        dto.setActionUrl(notification.getActionUrl());
-        dto.setActionLabel(notification.getActionLabel());
-        dto.setRead(notification.isRead());
-        dto.setCreatedAt(notification.getCreatedAt());
-        return dto;
-    }
-
-    public UUID extractKeyclockId(Jwt jwt) {
-        return UUID.fromString(jwt.getSubject());
-    }
-
-
     @Transactional
     public void deleteNotification(UUID notificationId) {
         notificationRepository.deleteById(notificationId);
     }
 
+    @Transactional
     public NotificationDto createNotification(NotificationCreateDto dto) {
         Notification notification = Notification.builder()
                 .keyclockId(dto.getKeyclockId())
@@ -72,11 +55,45 @@ public class NotificationService {
         return notificationDto;
     }
 
+    @Transactional(readOnly = true)
     public NotificationDto getNotificationById(UUID notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
 
         NotificationDto dto = mapToDo(notification);
         return dto;
+    }
+
+    @Transactional
+    public void markAsRead(UUID notificationId) {
+
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+
+        notification.setRead(true);
+        notificationRepository.save(notification);
+    }
+
+    public void markAllAsRead(UUID keycklock) {
+
+        notificationRepository.markAllAsRead(keycklock);
+    }
+
+    private NotificationDto mapToDo(Notification notification) {
+        NotificationDto dto = new NotificationDto();
+        dto.setId(notification.getId());
+        dto.setKeyclockId(notification.getKeyclockId());
+        dto.setType(notification.getType());
+        dto.setTitle(notification.getTitle());
+        dto.setMessage(notification.getMessage());
+        dto.setActionUrl(notification.getActionUrl());
+        dto.setActionLabel(notification.getActionLabel());
+        dto.setRead(notification.isRead());
+        dto.setCreatedAt(notification.getCreatedAt());
+        return dto;
+    }
+
+    public UUID extractKeyclockId(Jwt jwt) {
+        return UUID.fromString(jwt.getSubject());
     }
 }

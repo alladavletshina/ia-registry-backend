@@ -48,6 +48,27 @@ public class NotificationController {
         return ResponseEntity.ok(dto);
     }
 
+    @PatchMapping("/read/{id}")
+    @Operation(summary = "Отметить уведомление как прочитанное")
+    public ResponseEntity<Void> markAsRead(
+            @RequestParam UUID notificationId
+    ) {
+        notificationService.markAsRead(notificationId);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/read-all")
+    @Operation(summary = "Отметить все уведомления как прочитанные")
+    public ResponseEntity<Void> markAllAsRead(
+            @AuthenticationPrincipal Jwt jwt
+    ){
+
+        UUID keyclock = notificationService.extractKeyclockId(jwt);
+        notificationService.markAllAsRead(keyclock);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить уведомление")
     public ResponseEntity<Void> deleteNotification(
