@@ -3,6 +3,7 @@ package com.example.notificationservice.controller;
 import com.example.notificationservice.model.NotificationCreateDto;
 import com.example.notificationservice.model.NotificationDto;
 import com.example.notificationservice.model.NotificationType;
+import com.example.notificationservice.model.UnreadCountDto;
 import com.example.notificationservice.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +43,7 @@ public class NotificationController {
     @GetMapping("/{id}")
     @Operation(summary = "Получить уведомление по ИД")
     public ResponseEntity<NotificationDto> getNotificationById(
-            @RequestParam UUID notificationId
+            @PathVariable UUID notificationId
     ) {
         NotificationDto dto = notificationService.getNotificationById(notificationId);
         return ResponseEntity.ok(dto);
@@ -51,7 +52,7 @@ public class NotificationController {
     @PatchMapping("/read/{id}")
     @Operation(summary = "Отметить уведомление как прочитанное")
     public ResponseEntity<Void> markAsRead(
-            @RequestParam UUID notificationId
+            @PathVariable UUID notificationId
     ) {
         notificationService.markAsRead(notificationId);
 
@@ -69,10 +70,18 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/unread-count")
+    @Operation(summary = "Количество непрочитанных уведомлений")
+    public ResponseEntity<UnreadCountDto> getUnreadCount(@AuthenticationPrincipal Jwt jwt) {
+        UUID keyclockId = notificationService.extractKeyclockId(jwt);
+        long count = notificationService.countUnread(keyclockId);
+        return ResponseEntity.ok(new UnreadCountDto(count));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить уведомление")
     public ResponseEntity<Void> deleteNotification(
-            @RequestParam UUID notificationId
+            @PathVariable UUID notificationId
     ) {
         notificationService.deleteNotification(notificationId);
         return ResponseEntity.noContent().build();

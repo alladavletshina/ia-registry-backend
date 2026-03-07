@@ -15,7 +15,9 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 
     Page<Notification> findByKeyclockIdAndReadFalse(UUID keyclockId, Pageable pageable);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Notification n SET n.read = true WHERE n.keyclockId = :userId AND n.read = false")
-    void markAllAsRead(@Param("userId") UUID keycklock);
+    void markAllAsRead(@Param("userId") UUID userId);
+
+    long countByKeyclockIdAndReadFalse(UUID keyclockId);
 }

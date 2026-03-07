@@ -74,8 +74,8 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
     public void markAllAsRead(UUID keycklock) {
-
         notificationRepository.markAllAsRead(keycklock);
     }
 
@@ -91,6 +91,11 @@ public class NotificationService {
         dto.setRead(notification.isRead());
         dto.setCreatedAt(notification.getCreatedAt());
         return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public long countUnread(UUID keyclockId) {
+        return notificationRepository.countByKeyclockIdAndReadFalse(keyclockId);
     }
 
     public UUID extractKeyclockId(Jwt jwt) {
