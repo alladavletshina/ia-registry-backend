@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5673:5672"    # хост 5673 → контейнер 5672
+      - "15673:15672"  # веб-интерфейс
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
   # Keycloak (Identity Provider)
   postgres:
     image: postgres:15
