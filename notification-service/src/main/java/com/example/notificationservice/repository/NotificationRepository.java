@@ -10,4 +10,5 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     Page<Notification> findByKeyclockId(UUID keyclockId, Pageable pageable);
 
     Page<Notification> findByKeyclockIdAndReadFalse(UUID keyclockId, Pageable pageable);
+
 }

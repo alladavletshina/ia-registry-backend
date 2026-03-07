@@ -1,6 +1,7 @@
 package com.example.notificationservice.service;
 
 import com.example.notificationservice.model.Notification;
+import com.example.notificationservice.model.NotificationCreateDto;
 import com.example.notificationservice.model.NotificationDto;
 import com.example.notificationservice.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -46,6 +48,27 @@ public class NotificationService {
     public UUID extractKeyclockId(Jwt jwt) {
         return UUID.fromString(jwt.getSubject());
     }
-    
-    
+
+
+    @Transactional
+    public void deleteNotification(UUID notificationId) {
+        notificationRepository.deleteById(notificationId);
+    }
+
+    public NotificationDto createNotification(NotificationCreateDto dto) {
+        Notification notification = Notification.builder()
+                .keyclockId(dto.getKeyclockId())
+                .type(dto.getType())
+                .title(dto.getTitle())
+                .message(dto.getMessage())
+                .actionUrl(dto.getActionUrl())
+                .actionLabel(dto.getActionLabel())
+                .read(false)
+                .build();
+
+        notification = notificationRepository.save(notification);
+
+        NotificationDto notificationDto = mapToDo(notification);
+        return notificationDto;
+    }
 }

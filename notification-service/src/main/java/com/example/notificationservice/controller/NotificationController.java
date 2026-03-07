@@ -1,7 +1,8 @@
 package com.example.notificationservice.controller;
 
-import com.example.notificationservice.model.Notification;
+import com.example.notificationservice.model.NotificationCreateDto;
 import com.example.notificationservice.model.NotificationDto;
+import com.example.notificationservice.model.NotificationType;
 import com.example.notificationservice.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,10 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -34,15 +32,45 @@ public class NotificationController {
     public ResponseEntity<Page<NotificationDto>> getMyNotifications(
             @RequestParam(required = false) boolean unreadOnly,
             @PageableDefault(size = 20) Pageable pageable,
-            @AuthenticationPrincipal Jwt jwt) {
-        try {
-            UUID keycloakId = notificationService.extractKeyclockId(jwt);
-            Page<NotificationDto> page = notificationService.getUserNotifications(keycloakId, unreadOnly, pageable);
-            return ResponseEntity.ok(page);
-        } catch (Exception e) {
-            e.printStackTrace(); // теперь ошибка попадёт в логи Docker
-            throw e;
-        }
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID keyclockId = notificationService.extractKeyclockId(jwt);
+        Page<NotificationDto> page = notificationService.getUserNotifications(keyclockId, unreadOnly, pageable);
+        return ResponseEntity.ok(page);
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Удалить уведомление")
+    public ResponseEntity<Void> deleteNotification(
+            @RequestParam UUID notificationId
+    ) {
+        notificationService.deleteNotification(notificationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping
+    @Operation(summary = "Тестовый эндпоинт для создания уведомления (без RabbitMQ)")
+    public ResponseEntity<NotificationDto> createNotification(
+            @RequestParam NotificationType type,
+            @RequestParam String title,
+            @RequestParam(required = false) String message,
+            @RequestParam(required = false) String actionUrl,
+            @RequestParam(required = false) String actionLabel,
+            @AuthenticationPrincipal Jwt jwt
+            ) {
+
+        UUID keyclockId = notificationService.extractKeyclockId(jwt);
+
+        NotificationCreateDto dto = new NotificationCreateDto();
+        dto.setKeyclockId(keyclockId);
+        dto.setType(type);
+        dto.setTitle(title);
+        dto.setMessage(message);
+        dto.setActionUrl(actionUrl);
+        dto.setActionLabel(actionLabel);
+        dto.setRead(false);
+
+        NotificationDto notification = notificationService.createNotification(dto);
+        return ResponseEntity.ok(notification);
+    }
 }
