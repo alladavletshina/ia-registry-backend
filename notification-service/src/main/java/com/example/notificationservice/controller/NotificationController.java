@@ -39,6 +39,15 @@ public class NotificationController {
         return ResponseEntity.ok(page);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Получить уведомление по ИД")
+    public ResponseEntity<NotificationDto> getNotificationById(
+            @RequestParam UUID notificationId
+    ) {
+        NotificationDto dto = notificationService.getNotificationById(notificationId);
+        return ResponseEntity.ok(dto);
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить уведомление")
     public ResponseEntity<Void> deleteNotification(

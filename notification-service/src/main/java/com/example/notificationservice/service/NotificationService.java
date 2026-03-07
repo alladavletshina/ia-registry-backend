@@ -71,4 +71,12 @@ public class NotificationService {
         NotificationDto notificationDto = mapToDo(notification);
         return notificationDto;
     }
+
+    public NotificationDto getNotificationById(UUID notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+
+        NotificationDto dto = mapToDo(notification);
+        return dto;
+    }
 }
