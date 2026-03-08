@@ -43,6 +43,34 @@ public class AuditController {
         }
     }
 
+    @GetMapping("/export")
+    @Operation(summary = "Экспорт в CSV")
+    public ResponseEntity<String> exportCsv(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String search
+    ){
+        Page<AuditLogDto> all = auditService.getAuditLogs(startDate, endDate, userId, action, severity, search, Pageable.unpaged());
+        StringBuilder csv = new StringBuilder("Время,Пользователь,Действие,Детали,IP адрес,Уровень\n");
+
+        for (AuditLogDto log : all.getContent()) {
+            csv.append(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
+                    log.getTimestamp(),
+                    log.getUser(),
+                    log.getAction(),
+                    log.getDetails().replace("\"", "\"\""),
+                    log.getIp(),
+                    log.getSeverity()));
+        }
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv")
+                .header("Content-Disposition", "attachment; filename=audit_logs.csv")
+                .body(csv.toString());
+    }
+
     @GetMapping("/stats")
     @Operation(summary = "Статистика по записям аудита")
     public ResponseEntity<AuditStatsDto> getStats(
