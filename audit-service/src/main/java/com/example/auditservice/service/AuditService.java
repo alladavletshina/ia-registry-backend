@@ -94,4 +94,20 @@ public class AuditService {
 
         return new AuditStatsDto(total, info, warning, danger, success);
     }
+
+    @Transactional
+    public void saveAuditLog(AuditEventDto event) {
+        AuditLog log = AuditLog.builder()
+                .userId(event.getUserId())
+                .username(event.getUsername())
+                .action(event.getAction())
+                .details(event.getDetails())
+                .ip(event.getIp())
+                .severity(event.getSeverity())
+                .serviceName(event.getServiceName())
+                .objectId(event.getObjectId())
+                .objectType(event.getObjectType())
+                .build();
+        repository.save(log);
+    }
 }
