@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS assets (
     );
 
 -- Индексы для ускорения поиска
-CREATE INDEX idx_assets_owner ON assets(owner);
+CREATE INDEX idx_assets_owner_id ON assets(owner_id);
 CREATE INDEX idx_assets_status ON assets(status);
 CREATE INDEX idx_assets_category ON assets(category);
 

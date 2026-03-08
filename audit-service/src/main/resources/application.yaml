@@ -5,7 +5,7 @@ spring:
   application:
     name: audit-service
   datasource:
-    url: jdbc:postgresql://postgres-assets:5432/audit_logs
+    url: jdbc:postgresql://postgres-audit:5432/audit_logs
     username: audit
     password: audit123
     driver-class-name: org.postgresql.Driver
@@ -26,6 +26,18 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
 
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000
+
   security:
     oauth2:
       resourceserver:
@@ -36,10 +48,14 @@ spring:
 logging:
   level:
     org.springframework: INFO
-    org.hibernate.SQL: DEBUG
     org.hibernate.type: TRACE
     org.springframework.security: DEBUG
+    com.example.auditservice: DEBUG
     org.springframework.web: TRACE
+    org.flywaydb: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
 
 springdoc:
   api-docs:
