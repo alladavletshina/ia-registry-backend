@@ -2,6 +2,7 @@ package com.example.auditservice.controller;
 
 import com.example.auditservice.model.dto.AuditEventDto;
 import com.example.auditservice.model.dto.AuditLogDto;
+import com.example.auditservice.model.dto.AuditStatsDto;
 import com.example.auditservice.service.AuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,16 @@ public class AuditController {
             log.error("Ошибка при создании аудит-лога: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+    @GetMapping("/stats")
+    @Operation(summary = "Статистика по записям аудита")
+    public ResponseEntity<AuditStatsDto> getStats(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ){
+        AuditStatsDto stats = auditService.getStats(startDate, endDate);
+        return ResponseEntity.ok(stats);
     }
 
     @GetMapping

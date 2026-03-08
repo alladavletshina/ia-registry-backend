@@ -2,6 +2,7 @@ package com.example.auditservice.service;
 
 import com.example.auditservice.model.dto.AuditEventDto;
 import com.example.auditservice.model.dto.AuditLogDto;
+import com.example.auditservice.model.dto.AuditStatsDto;
 import com.example.auditservice.model.entity.AuditLog;
 import com.example.auditservice.model.entity.Severity;
 import com.example.auditservice.repository.AuditLogRepository;
@@ -49,7 +50,6 @@ public class AuditService {
             }
         }
 
-        // Строим спецификацию динамически
         Specification<AuditLog> spec = Specification
                 .where(hasTimestampAfter(start))
                 .and(hasTimestampBefore(end))
@@ -75,9 +75,23 @@ public class AuditService {
                 .objectId(dto.getObjectId())
                 .objectType(dto.getObjectType())
                 .build();
-        // timestamp проставится автоматически через @PrePersist
+
         AuditLog saved = repository.save(log);
         return AuditLogDto.fromEntity(saved);
     }
 
+    @Transactional(readOnly = true)
+    public AuditStatsDto getStats(LocalDate startDate, LocalDate endDate) {
+
+        LocalDateTime start = startDate != null ? startDate.atStartOfDay() : LocalDateTime.of(1900, 1, 1, 0, 0);
+        LocalDateTime end = endDate != null ? endDate.atTime(LocalTime.MAX) : LocalDateTime.of(2100, 1, 1, 0, 0);
+
+        long total = repository.countByDateRange(start, end);
+        long info = repository.countBySeverityAndDateRange(Severity.INFO, start, end);
+        long warning = repository.countBySeverityAndDateRange(Severity.WARNING, start, end);
+        long danger = repository.countBySeverityAndDateRange(Severity.DANGER, start, end);
+        long success = repository.countBySeverityAndDateRange(Severity.SUCCESS, start, end);
+
+        return new AuditStatsDto(total, info, warning, danger, success);
+    }
 }

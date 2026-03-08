@@ -17,4 +17,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, UUID>, JpaSpecificationExecutor<AuditLog> {
+
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.timestamp BETWEEN :start AND :end")
+    long countByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.severity = :severity AND a.timestamp BETWEEN :start AND :end")
+    long countBySeverityAndDateRange(@Param("severity") Severity severity, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
