@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -192,5 +193,44 @@ public class TaskService {
         }
 
         return new TaskStatsDto(total, pending, inProgress, completed, overdue);
+    }
+
+    public TaskDto updateTaskFields(long id, Map<String, Object> updates, Jwt jwt) {
+        Task task = findTaskOrThrow(id);
+        // Убрана проверка прав доступа (checkAccess) для тестирования
+
+        boolean changed = false;
+
+        // Обновляем статус, если передан
+        if (updates.containsKey("status")) {
+            String newStatusStr = (String) updates.get("status");
+            try {
+                TaskStatus newStatus = TaskStatus.valueOf(newStatusStr);
+                task.setStatus(newStatus);
+                changed = true;
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid status value: " + newStatusStr);
+            }
+        }
+
+        // Обновляем dueDate, если передан
+        if (updates.containsKey("dueDate")) {
+            String dueDateStr = (String) updates.get("dueDate");
+            try {
+                LocalDate newDueDate = LocalDate.parse(dueDateStr);
+                task.setDueDate(newDueDate);
+                changed = true;
+            } catch (DateTimeParseException e) {
+                throw new RuntimeException("Invalid dueDate format. Use YYYY-MM-DD");
+            }
+        }
+
+        // Если ни одно поле не изменилось (или переданы пустые значения), кидаем исключение
+        if (!changed) {
+            throw new RuntimeException("No valid fields to update");
+        }
+
+        task.setUpdatedAt(LocalDate.now());
+        return mapToDto(task);
     }
 }

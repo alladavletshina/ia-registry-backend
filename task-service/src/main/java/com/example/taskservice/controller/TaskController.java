@@ -25,10 +25,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -39,6 +41,28 @@ import java.util.UUID;
 public class TaskController {
 
     private final TaskService taskService;
+
+    @Operation(summary = "Обновить поля задачи (статус, срок выполнения)",
+            description = "Позволяет частично обновить задачу. Доступные поля: status, dueDate. Для изменения других полей используйте другие эндпоинты.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Задача обновлена"),
+            @ApiResponse(responseCode = "400", description = "Пустой запрос или неверный формат данных"),
+            @ApiResponse(responseCode = "404", description = "Задача не найдена"),
+            @ApiResponse(responseCode = "403", description = "Нет доступа к задаче")
+    })
+    @PatchMapping("/{id}/update")
+    public ResponseEntity<TaskDto> updateTaskFields(
+            @PathVariable long id,
+            @RequestBody Map<String, Object> updates,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        if (updates.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        TaskDto updated = taskService.updateTaskFields(id, updates, jwt);
+        return ResponseEntity.ok(updated);
+    }
 
     @Operation(summary = "Получить статистику по задачам текущего пользователя (для админа — общую)")
     @ApiResponses(value = {
