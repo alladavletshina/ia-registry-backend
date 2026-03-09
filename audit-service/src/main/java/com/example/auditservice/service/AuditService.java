@@ -110,4 +110,11 @@ public class AuditService {
                 .build();
         repository.save(log);
     }
+
+    public AuditLogDto getAuditLogById(UUID id) {
+        AuditLog auditLog = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No log with such Id"));
+
+        return AuditLogDto.fromEntity(auditLog);
+    }
 }

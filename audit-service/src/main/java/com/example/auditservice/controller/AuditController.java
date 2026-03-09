@@ -81,6 +81,15 @@ public class AuditController {
         return ResponseEntity.ok(stats);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Получение записи аудита по ИД")
+    public ResponseEntity<AuditLogDto> getAuditLogById(
+            @PathVariable UUID id
+    ){
+        AuditLogDto logDto = auditService.getAuditLogById(id);
+        return ResponseEntity.ok(logDto);
+    }
+
     @GetMapping
     public ResponseEntity<Page<AuditLogDto>> getAuditLogs(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
