@@ -1,14 +1,64 @@
-report-service:
-  build: ./report-service
-  ports:
-    - "8089:8089"
+server:
+  port: 8089
+
+spring:
+  application:
+    name: report-service
   environment:
     KEYCLOAK_URL: http://keycloak:8080
     ASSET_SERVICE_URL: http://asset-service:8084
     USER_SERVICE_URL: http://user-service:8085
     TASK_SERVICE_URL: http://task-service:8086
+    AUDIT_SERVICE_URL: http://audit-service:8088
+
   depends_on:
     - keycloak
     - asset-service
     - user-service
     - task-service
+    - audit-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/asset-management
+          jwk-set-uri: http://keycloak:8080/realms/asset-management/protocol/openid-connect/certs
+
+services:
+  user-service:
+    url: http://user-service:8080/api/users
+  asset-service:
+    url: http://asset-service:8084/api/assets
+  task-service:
+    url: http://task-service:8086/api/tasks
+  audit-service:
+    url: http:///audit-service:8088/api/audit
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate.type: TRACE
+    org.springframework.security: DEBUG
+    com.example.reportservice.client: DEBUG
+    org.springframework.web: TRACE
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    default-model-expand-depth: 3
+    default-models-expand-depth: 3
+    try-it-out-enabled: true
+    filter: true

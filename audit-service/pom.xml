@@ -12,8 +12,8 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.asset</groupId>
-    <artifactId>asset-servicecd..</artifactId>
+    <groupId>com.audit</groupId>
+    <artifactId>audit-servicecd..</artifactId>
     <version>1.0.0</version>
 
     <properties>
