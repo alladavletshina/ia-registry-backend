@@ -17,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.auditservice.repository.AuditLogSpecifications.*;
 
@@ -116,5 +118,30 @@ public class AuditService {
                 .orElseThrow(() -> new RuntimeException("No log with such Id"));
 
         return AuditLogDto.fromEntity(auditLog);
+    }
+
+    public List<AuditEventDto> getEventsForPeriod(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime start = startDate != null ? startDate.atStartOfDay() : LocalDateTime.of(1900, 1, 1, 0, 0);
+        LocalDateTime end = endDate != null ? endDate.atTime(LocalTime.MAX) : LocalDateTime.of(2100, 1, 1, 0, 0);
+
+        List<AuditLog> logs = repository.findByTimestampBetween(start, end);
+        return logs.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private AuditEventDto convertToDto(AuditLog log) {
+
+        AuditEventDto dto = new AuditEventDto();
+        dto.setUserId(log.getUserId());
+        dto.setUsername(log.getUsername());
+        dto.setAction(log.getAction());
+        dto.setDetails(log.getDetails());
+        dto.setIp(log.getIp());
+        dto.setSeverity(log.getSeverity());
+        dto.setServiceName(log.getServiceName());
+        dto.setObjectId(log.getObjectId());
+        dto.setObjectType(log.getObjectType());
+        return dto;
     }
 }

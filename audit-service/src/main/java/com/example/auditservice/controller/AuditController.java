@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -88,6 +89,13 @@ public class AuditController {
     ){
         AuditLogDto logDto = auditService.getAuditLogById(id);
         return ResponseEntity.ok(logDto);
+    }
+
+    @GetMapping("/report")
+    public List<AuditEventDto> getReportData(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return auditService.getEventsForPeriod(startDate, endDate);
     }
 
     @GetMapping

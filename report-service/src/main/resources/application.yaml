@@ -32,7 +32,7 @@ services:
   task-service:
     url: http://task-service:8086/api/tasks
   audit-service:
-    url: http:///audit-service:8088/api/audit
+    url: http://audit-service:8088/api/audit
 
 feign:
   client:

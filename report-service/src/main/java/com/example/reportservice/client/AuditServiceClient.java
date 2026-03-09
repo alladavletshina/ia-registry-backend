@@ -9,7 +9,11 @@ import java.util.List;
 
 @FeignClient(name = "audit-service", url = "${services.audit-service.url}")
 public interface AuditServiceClient {
-    @GetMapping
-    List<AuditEventDTO> getAuditEvents(@RequestParam(required = false) String from,
-                                       @RequestParam(required = false) String to);
+
+    // Для отчёта по безопасности
+    @GetMapping("/report")
+    List<AuditEventDTO> getReportData(
+            @RequestParam("from") String from,
+            @RequestParam("to") String to
+    );
 }

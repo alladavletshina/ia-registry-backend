@@ -152,7 +152,7 @@ public class ReportController {
 
         // Проверка audit-service (статистика)
         try {
-            var stats = auditClient.getAuditEvents("2025-01-01", "2026-09-11");
+            var stats = auditClient.getReportData(null, null);
             services.put("audit-service", Map.of(
                     "status", "UP",
                     "response", stats != null ? "статистика получена" : "OK"

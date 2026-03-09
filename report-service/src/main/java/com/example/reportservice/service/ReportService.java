@@ -65,12 +65,44 @@ public class ReportService {
 
     @Cacheable(value = "security", key = "#period")
     public SecurityReportDTO getSecurityReport(String period) {
-        List<AuditEventDTO> events = auditClient.getAuditEvents(null, null);
-        SecurityReportDTO report = new SecurityReportDTO();
-        report.setRiskDistribution(buildRiskDistribution(events));
-        report.setAuditEvents(buildAuditEventsTimeline(events));
-        report.setComplianceStatus(buildComplianceStatus());
-        return report;
+        log.info("Generating security report for period: {}", period);
+        try {
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = calculateStartDate(period, endDate);
+
+            log.debug("Calling audit-service with dates: {} - {}", startDate, endDate);
+            List<AuditEventDTO> events = auditClient.getReportData(startDate.toString(), endDate.toString());
+            log.debug("Received {} events from audit-service", events.size());
+
+            SecurityReportDTO report = new SecurityReportDTO();
+            report.setRiskDistribution(buildRiskDistribution(events));
+            report.setAuditEvents(buildAuditEventsTimeline(events));
+            report.setComplianceStatus(buildComplianceStatus()); // этот метод уже есть
+            return report;
+        } catch (Exception e) {
+            log.error("Error in getSecurityReport", e);
+            // Вместо проброса исключения вернём отчёт с нулевыми данными
+            SecurityReportDTO fallback = new SecurityReportDTO();
+            fallback.setRiskDistribution(List.of(
+                    createRiskCount("Высокий риск", 0, "#ef4444"),
+                    createRiskCount("Средний риск", 0, "#f59e0b"),
+                    createRiskCount("Низкий риск", 0, "#10b981"),
+                    createRiskCount("Информационный", 0, "#3b82f6")
+            ));
+            fallback.setAuditEvents(Collections.emptyList());
+            fallback.setComplianceStatus(buildComplianceStatus());
+            return fallback;
+        }
+    }
+
+    private LocalDate calculateStartDate(String period, LocalDate endDate) {
+        return switch (period) {
+            case "week" -> endDate.minusWeeks(1);
+            case "month" -> endDate.minusMonths(1);
+            case "quarter" -> endDate.minusMonths(3);
+            case "year" -> endDate.minusYears(1);
+            default -> endDate.minusMonths(1); // по умолчанию месяц
+        };
     }
 
     @Cacheable(value = "performance", key = "#period")
@@ -263,13 +295,52 @@ public class ReportService {
     }
 
     private List<SecurityReportDTO.RiskCount> buildRiskDistribution(List<AuditEventDTO> events) {
-        // Заглушка
-        return List.of(
-                createRiskCount("Высокий риск", 12, "#ef4444"),
-                createRiskCount("Средний риск", 34, "#f59e0b"),
-                createRiskCount("Низкий риск", 89, "#10b981"),
-                createRiskCount("Информационный", 21, "#3b82f6")
+        // Группируем по severity
+        Map<String, Long> counts = events.stream()
+                .collect(Collectors.groupingBy(AuditEventDTO::getSeverity, Collectors.counting()));
+
+        List<SecurityReportDTO.RiskCount> list = new ArrayList<>();
+
+        // Задаём соответствие severity -> название и цвет
+        Map<String, String[]> severityMapping = Map.of(
+                "DANGER", new String[]{"Высокий риск", "#ef4444"},
+                "WARNING", new String[]{"Средний риск", "#f59e0b"},
+                "INFO", new String[]{"Низкий риск", "#10b981"},
+                "SUCCESS", new String[]{"Информационный", "#3b82f6"}
         );
+
+        severityMapping.forEach((sev, props) -> {
+            long count = counts.getOrDefault(sev, 0L);
+            SecurityReportDTO.RiskCount rc = new SecurityReportDTO.RiskCount();
+            rc.setName(props[0]);
+            rc.setValue((int) count);
+            rc.setColor(props[1]);
+            list.add(rc);
+        });
+
+        return list;
+    }
+
+    private String mapSeverityToName(String severity) {
+        if (severity == null) return "Информационный";
+        return switch (severity) {
+            case "DANGER" -> "Высокий риск";
+            case "WARNING" -> "Средний риск";
+            case "INFO" -> "Низкий риск";
+            case "SUCCESS" -> "Успех";
+            default -> "Информационный";
+        };
+    }
+
+    private String mapSeverityToColor(String severity) {
+        if (severity == null) return "#3b82f6";
+        return switch (severity) {
+            case "DANGER" -> "#ef4444";
+            case "WARNING" -> "#f59e0b";
+            case "INFO" -> "#10b981";
+            case "SUCCESS" -> "#22c55e";
+            default -> "#3b82f6";
+        };
     }
 
     private SecurityReportDTO.RiskCount createRiskCount(String name, int value, String color) {
@@ -281,13 +352,10 @@ public class ReportService {
     }
 
     private List<SecurityReportDTO.DateCount> buildAuditEventsTimeline(List<AuditEventDTO> events) {
-        // Заглушка
+        // Заглушка, так как нет временных меток
         return List.of(
-                createDateCount("01.01", 45),
-                createDateCount("08.01", 52),
-                createDateCount("15.01", 48),
-                createDateCount("22.01", 56),
-                createDateCount("29.01", 62)
+                createDateCount("01.01", 0),
+                createDateCount("08.01", 0)
         );
     }
 
