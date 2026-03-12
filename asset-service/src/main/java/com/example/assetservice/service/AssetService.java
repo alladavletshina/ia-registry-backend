@@ -91,7 +91,7 @@ public class AssetService {
     }
 
     @Transactional
-    public AssetResponse updateAsset(long id, @Valid CreateAssetRequest request) {
+    public AssetResponse updateAsset(long id, @Valid CreateAssetRequest request, Jwt jwt, String clientIp) {
 
         Asset asset = assetRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Актив с id" + id + " не найден"));
@@ -109,15 +109,44 @@ public class AssetService {
         asset.setTags(request.getTags());
         asset.setUpdatedAt(LocalDateTime.now());
 
+        /* Отправка события аудита */
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(UUID.fromString(jwt.getSubject()));
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("UPDATE_ASSET");
+        event.setDetails(String.format("Изменен актив: %s (id=%d)", asset.getName(), asset.getId()));
+        event.setIp(clientIp);
+        event.setSeverity("INFO");
+        event.setServiceName("asset-service");
+        event.setObjectId(String.valueOf(asset.getId()));
+        event.setObjectType("Asset");
+
+        auditEventPublisher.publishEvent(event);
         return mapToResponse(asset);
     }
 
     @Transactional
-    public void deleteAsset(Long id) {
+    public void deleteAsset(Long id, Jwt jwt, String clientIp) {
         if (!assetRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Актив с id " + id + " не найден");
         }
+
+        Asset asset = assetRepository.getAssetById(id);
+
+        /* Отправка события аудита */
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(UUID.fromString(jwt.getSubject()));
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("DELETE_ASSET");
+        event.setDetails(String.format("Удален актив: %s (id=%d)", asset.getName(), asset.getId()));
+        event.setIp(clientIp);
+        event.setSeverity("WARNING");
+        event.setServiceName("asset-service");
+        event.setObjectId(String.valueOf(asset.getId()));
+        event.setObjectType("Asset");
+
         assetRepository.deleteById(id);
+        auditEventPublisher.publishEvent(event);
     }
 
     public List<AssetResponse> getAssetByOwnerId(String ownerId) {

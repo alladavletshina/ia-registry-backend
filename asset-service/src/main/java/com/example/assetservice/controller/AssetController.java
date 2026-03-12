@@ -94,8 +94,13 @@ public class AssetController {
     })
     public ResponseEntity<AssetResponse> updateAsset(
             @PathVariable long id,
-            @Valid @RequestBody CreateAssetRequest request) {
-        AssetResponse updated = assetService.updateAsset(id, request);
+            @Valid @RequestBody CreateAssetRequest request,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest httpRequest
+    ) {
+        String clientIp = IpUtils.getClientIp(httpRequest);
+
+        AssetResponse updated = assetService.updateAsset(id, request, jwt, clientIp);
         return ResponseEntity.ok(updated);
     }
 
@@ -108,9 +113,13 @@ public class AssetController {
             @ApiResponse(responseCode = "401", description = "Неавторизован"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещён")
     })
-    public ResponseEntity<Void> deleteAsset(@PathVariable long id){
-
-        assetService.deleteAsset(id);
+    public ResponseEntity<Void> deleteAsset(
+            @PathVariable long id,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest httpRequest
+    ){
+        String clientIp = IpUtils.getClientIp(httpRequest);
+        assetService.deleteAsset(id, jwt, clientIp);
         return ResponseEntity.noContent().build();
     }
 
