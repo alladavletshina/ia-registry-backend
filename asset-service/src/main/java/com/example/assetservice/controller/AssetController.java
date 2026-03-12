@@ -4,12 +4,14 @@ import com.example.assetservice.dto.AssetResponse;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
 import com.example.assetservice.service.AssetService;
+import com.example.assetservice.utils.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,9 +41,14 @@ public class AssetController {
             @ApiResponse(responseCode = "401", description = "Неавторизован"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещён")
     })
-    public ResponseEntity<Asset> createAsset(@Valid @RequestBody CreateAssetRequest request) {
+    public ResponseEntity<Asset> createAsset(
+            @Valid @RequestBody CreateAssetRequest request,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest httpRequest
+    ) {
+        String clientIp = IpUtils.getClientIp(httpRequest);
 
-        Asset created = assetService.createAsset(request);
+        Asset created = assetService.createAsset(request, jwt, clientIp);
         return new ResponseEntity<>(created,HttpStatus.CREATED);
     }
 

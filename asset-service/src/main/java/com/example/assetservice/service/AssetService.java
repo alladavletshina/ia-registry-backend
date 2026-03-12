@@ -1,18 +1,21 @@
 package com.example.assetservice.service;
 
 import com.example.assetservice.dto.AssetResponse;
+import com.example.assetservice.dto.AuditEventDto;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
 import com.example.assetservice.repository.AssetRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,9 +23,10 @@ import java.util.stream.Collectors;
 public class AssetService {
 
     private final AssetRepository assetRepository;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Transactional
-    public Asset createAsset(CreateAssetRequest request) {
+    public Asset createAsset(CreateAssetRequest request, Jwt jwt, String clientIp) {
         Asset asset = new Asset();
         asset.setName(request.getName());
         asset.setCategory(request.getCategory());
@@ -36,7 +40,22 @@ public class AssetService {
         asset.setLocation(request.getLocation());
         asset.setTags(request.getTags());
 
-        return assetRepository.save(asset);
+        Asset saved = assetRepository.save(asset);
+
+        /* Отправка события аудита */
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(UUID.fromString(jwt.getSubject()));
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("CREATE_ASSET");
+        event.setDetails(String.format("Создан актив: %s (id=%d)", saved.getName(), saved.getId()));
+        event.setIp(clientIp);
+        event.setSeverity("INFO");
+        event.setServiceName("asset-service");
+        event.setObjectId(String.valueOf(saved.getId()));
+        event.setObjectType("Asset");
+
+        auditEventPublisher.publishEvent(event);
+        return saved;
     }
 
     @Transactional(readOnly = true)
