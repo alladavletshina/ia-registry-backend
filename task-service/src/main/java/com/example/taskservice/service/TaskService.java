@@ -4,6 +4,7 @@ import com.example.taskservice.model.Task;
 import com.example.taskservice.model.TaskPriority;
 import com.example.taskservice.model.TaskStatus;
 import com.example.taskservice.model.TaskType;
+import com.example.taskservice.model.request.AuditEventDto;
 import com.example.taskservice.model.request.TaskCreateDto;
 import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
@@ -35,6 +36,7 @@ import java.util.UUID;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final AuditEventPublisher auditEventPublisher;
 
     public TaskDto getTaskById(long id, Jwt jwt) {
         Task task = findTaskOrThrow(id);
@@ -90,7 +92,7 @@ public class TaskService {
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
 
-    public TaskDto createTask(@Valid TaskCreateDto dto, Jwt jwt) {
+    public TaskDto createTask(@Valid TaskCreateDto dto, Jwt jwt, String clientIp) {
         UUID currentUserId = extractUserId(jwt);
 
         Task task = new Task();
@@ -109,18 +111,49 @@ public class TaskService {
         task.setUpdatedAt(LocalDate.now());
 
         Task saved = taskRepository.save(task);
+
+        /* Отправка события аудита */
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(currentUserId);
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("TASK_CREATE");
+        event.setDetails(String.format("Создана задача: %s (id=%d)", saved.getTitle(), saved.getId()));
+        event.setSeverity("INFO");
+        event.setServiceName("task-service");
+        event.setObjectId(String.valueOf(saved.getId()));
+        event.setObjectType("Task");
+        event.setIp(clientIp);
+
+        auditEventPublisher.publishEvent(event);
+
         return mapToDto(saved);
     }
 
-    public void deleteTask(long id) {
+    public void deleteTask(long id, Jwt jwt, String clientIp) {
 
         if(!taskRepository.existsById(id)) {
             throw new RuntimeException("Task not found with id: " + id);
         }
+
+        UUID currentUserId = extractUserId(jwt);
+
+        Task task = findTaskOrThrow(id);
         taskRepository.deleteById(id);
+
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(currentUserId);
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("TASK_DELETE");
+        event.setDetails(String.format("Удалена задача id=%d: %s", id, task.getTitle()));
+        event.setSeverity("WARNING");
+        event.setServiceName("task-service");
+        event.setObjectId(String.valueOf(id));
+        event.setObjectType("Task");
+        event.setIp(clientIp);
+        auditEventPublisher.publishEvent(event);
     }
 
-    public TaskDto updateTask(long id, TaskUpdateDto dto, Jwt jwt) {
+    public TaskDto updateTask(long id, TaskUpdateDto dto, Jwt jwt, String clientIp) {
 
         Task task = findTaskOrThrow(id);
         checkAccess(task, jwt);
@@ -145,6 +178,21 @@ public class TaskService {
         } task.setAssignedTo(dto.getAssignedTo());
 
         task.setUpdatedAt(LocalDate.now());
+
+        UUID currentUserId = extractUserId(jwt);
+
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(currentUserId);
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("TASK_UPDATE");
+        event.setDetails(String.format("Обновлена задача id=%d: %s", id, task.getTitle()));
+        event.setSeverity("INFO");
+        event.setServiceName("task-service");
+        event.setObjectId(String.valueOf(id));
+        event.setObjectType("Task");
+        event.setIp(clientIp);
+        auditEventPublisher.publishEvent(event);
+
         return mapToDto(task);
     }
 
@@ -195,7 +243,7 @@ public class TaskService {
         return new TaskStatsDto(total, pending, inProgress, completed, overdue);
     }
 
-    public TaskDto updateTaskFields(long id, Map<String, Object> updates, Jwt jwt) {
+    public TaskDto updateTaskFields(long id, Map<String, Object> updates, Jwt jwt, String clientIp) {
         Task task = findTaskOrThrow(id);
         // Убрана проверка прав доступа (checkAccess) для тестирования
 
@@ -231,6 +279,21 @@ public class TaskService {
         }
 
         task.setUpdatedAt(LocalDate.now());
+
+        UUID currentUserId = extractUserId(jwt);
+
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(currentUserId);
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("TASK_UPDATE_FIELDS");
+        event.setDetails(String.format("Частичное обновление задачи id=%d", id));
+        event.setSeverity("INFO");
+        event.setServiceName("task-service");
+        event.setObjectId(String.valueOf(id));
+        event.setObjectType("Task");
+        event.setIp(clientIp);
+        auditEventPublisher.publishEvent(event);
+
         return mapToDto(task);
     }
 }

@@ -8,12 +8,14 @@ import com.example.taskservice.model.request.TaskUpdateDto;
 import com.example.taskservice.model.response.TaskDto;
 import com.example.taskservice.model.statistics.TaskStatsDto;
 import com.example.taskservice.service.TaskService;
+import com.example.taskservice.util.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,13 +56,17 @@ public class TaskController {
     public ResponseEntity<TaskDto> updateTaskFields(
             @PathVariable long id,
             @RequestBody Map<String, Object> updates,
-            @AuthenticationPrincipal Jwt jwt) {
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest request
+    ) {
 
         if (updates.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
 
-        TaskDto updated = taskService.updateTaskFields(id, updates, jwt);
+        String clientIp = IpUtils.getClientIp(request);
+
+        TaskDto updated = taskService.updateTaskFields(id, updates, jwt, clientIp);
         return ResponseEntity.ok(updated);
     }
 
@@ -101,9 +107,12 @@ public class TaskController {
     @PreAuthorize("hasRole('admin')")
     public ResponseEntity<TaskDto> createTask (
             @Valid @RequestBody TaskCreateDto createDto,
-            @AuthenticationPrincipal Jwt jwt
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest request
             ) {
-                TaskDto created = taskService.createTask(createDto, jwt);
+
+                String clientIp = IpUtils.getClientIp(request);
+                TaskDto created = taskService.createTask(createDto, jwt, clientIp);
                 return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -116,9 +125,12 @@ public class TaskController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('admin')")
     public ResponseEntity<Void> deleteTask(
-            @Parameter(description = "ID задачи", required = true) @PathVariable long id
+            @Parameter(description = "ID задачи", required = true) @PathVariable long id,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest request
     ) {
-        taskService.deleteTask(id);
+        String clientIp = IpUtils.getClientIp(request);
+        taskService.deleteTask(id, jwt, clientIp);
         return ResponseEntity.noContent().build();
     }
 
@@ -132,10 +144,12 @@ public class TaskController {
     public ResponseEntity<TaskDto> updateTask (
             @Parameter(description = "ID задачи", required = true) @PathVariable long id,
             @RequestBody TaskUpdateDto patchDto,
-            @AuthenticationPrincipal Jwt jwt
-            ) {
-              TaskDto updated = taskService.updateTask(id,patchDto, jwt);
-              return ResponseEntity.ok(updated);
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest request
+    ) {
+        String clientIp = IpUtils.getClientIp(request);
+        TaskDto updated = taskService.updateTask(id,patchDto, jwt, clientIp);
+        return ResponseEntity.ok(updated);
     }
 
 
