@@ -29,6 +29,12 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
 
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
   security:
     oauth2:
       resourceserver:

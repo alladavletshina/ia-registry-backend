@@ -3,12 +3,14 @@ package com.example.userservice.controller;
 import com.example.userservice.dto.request.UserRequestDto;
 import com.example.userservice.dto.response.UserResponseDto;
 import com.example.userservice.service.UserService;
+import com.example.userservice.util.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,8 +87,12 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Внутренняя ошибка")
     })
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable UUID id,
-                                                      @Valid @RequestBody UserRequestDto request) {
-        UserResponseDto updated = userService.updateUser(id, request);
+                                                      @Valid @RequestBody UserRequestDto request,
+                                                      HttpServletRequest httpRequest,
+                                                      @AuthenticationPrincipal Jwt jwt
+                                                      ) {
+        String clientIp = IpUtils.getClientIp(httpRequest);
+        UserResponseDto updated = userService.updateUser(id, request,clientIp, jwt);
         return ResponseEntity.ok(updated);
     }
 }

@@ -3,12 +3,14 @@ package com.example.userservice.controller;
 import com.example.userservice.dto.request.RegisterRequestDto;
 import com.example.userservice.dto.response.UserResponseDto;
 import com.example.userservice.service.UserService;
+import com.example.userservice.util.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +39,14 @@ public class RegistrationController {
             @ApiResponse(responseCode = "409", description = "Пользователь с таким email уже существует",
                     content = @Content)
     })
-    public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<UserResponseDto> register(
+            @Valid @RequestBody RegisterRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
         log.info("Регистрация нового пользователя: {}", request.getEmail());
 
-        UserResponseDto createdUser = userService.register(request);
+        String clientIp = IpUtils.getClientIp(httpRequest);
+        UserResponseDto createdUser = userService.register(request, clientIp);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

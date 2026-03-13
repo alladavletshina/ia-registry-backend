@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.example.userservice.dto.request.AuditEventDto;
 import com.example.userservice.dto.request.RegisterRequestDto;
 import com.example.userservice.dto.request.UserRequestDto;
 import com.example.userservice.dto.response.UserResponseDto;
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,8 +27,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final KeycloakAdminClient keycloakClient;
+    private final AuditEventPublisher auditEventPublisher;
 
-    public UserResponseDto register(RegisterRequestDto request) {
+    public UserResponseDto register(RegisterRequestDto request, String clientIp) {
 
         //Проверяем существует ли такой пользователь
         if(userRepository.existsByEmail(request.getEmail())) {
@@ -81,6 +84,18 @@ public class UserService {
             eventPublisher.publishUserRegistered(event);
             log.info("Опубликовано событие user.registered для: {}", finalUser.getEmail());*/
 
+            AuditEventDto event = new AuditEventDto();
+            event.setUserId(UUID.fromString(keycloakUserId));
+            event.setUsername(finalUser.getEmail());
+            event.setAction("USER_REGISTER");
+            event.setDetails(String.format("Зарегистрирован пользователь: %s %s (%s)", finalUser.getFirstName(), finalUser.getLastName(), finalUser.getEmail()));
+            event.setSeverity("INFO");
+            event.setServiceName("user-service");
+            event.setObjectId(finalUser.getId().toString());
+            event.setObjectType("User");
+            event.setIp(clientIp);
+            auditEventPublisher.publishEvent(event);
+
             return mapToDto(finalUser);
         } catch (Exception e) {
             log.error("Ошибка при регистрации пользователя: {}", e.getMessage(), e);
@@ -131,7 +146,7 @@ public class UserService {
         return mapToDto(user);
     }
 
-    public UserResponseDto updateUser(UUID id, @Valid UserRequestDto request) {
+    public UserResponseDto updateUser(UUID id, @Valid UserRequestDto request, String clientIp, Jwt jwt) {
 
         // 1. Найти пользователя
         UserEntity user = userRepository.findById(id)
@@ -163,17 +178,25 @@ public class UserService {
         }
         if (request.getRole() != null) {
             user.setRole(request.getRole());
-            // Если роль хранится в Keycloak, обновить её там
-            // keycloakClient.updateUserRole(user.getKeycloakId(), request.getRole());
         }
         if (request.getActive() != null) {
             user.setStatus(request.getActive() ? UserStatus.ACTIVE : UserStatus.BLOCKED);
-            // Если нужно, можно также деактивировать в Keycloak (например, отключить пользователя)
-            // keycloakClient.enableUser(user.getKeycloakId(), request.getIsActive());
         }
 
         user.setUpdatedAt(LocalDateTime.now());
         UserEntity updatedUser = userRepository.save(user);
+
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(UUID.fromString(jwt.getSubject()));
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("USER_UPDATE");
+        event.setDetails(String.format("Обновлен пользователь id=%s: %s %s (%s)", id, user.getFirstName(), user.getLastName(), user.getEmail()));
+        event.setSeverity("INFO");
+        event.setServiceName("user-service");
+        event.setObjectId(id.toString());
+        event.setObjectType("User");
+        event.setIp(clientIp);
+        auditEventPublisher.publishEvent(event);
         return mapToDto(updatedUser);
 
     }
