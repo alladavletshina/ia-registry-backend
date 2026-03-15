@@ -38,6 +38,11 @@ spring:
           issuer-uri: http://keycloak:8080/realms/asset-management
           jwk-set-uri: http://keycloak:8080/realms/asset-management/protocol/openid-connect/certs
 
+fstec:
+  threat-url: https://bdu.fstec.ru/files/documents/thrlist.xlsx
+  parser-type: xlsx   # или ods
+  sync-cron: "0 0 3 * * *"
+
 logging:
   level:
     org.springframework: INFO
@@ -45,6 +50,8 @@ logging:
     org.hibernate.type: TRACE
     org.springframework.security: DEBUG
     org.springframework.web: TRACE
+    com.example.assetservice.service.fstec: DEBUG
+    org.apache.poi: WARN
 
 springdoc:
   api-docs:

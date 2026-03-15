@@ -1,0 +1,2 @@
+ALTER TABLE threats ALTER COLUMN source TYPE TEXT;
+ALTER TABLE threats ALTER COLUMN object_affected TYPE TEXT;
