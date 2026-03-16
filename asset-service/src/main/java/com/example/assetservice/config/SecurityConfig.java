@@ -30,8 +30,8 @@ public class SecurityConfig {
             "/api/assets/actuator/health",
             "/actuator/health",
             "/actuator/info",
-            "/api/threats",
-            "/api/threats/**"
+            "/api/assets/threats",
+            "/api/assets/threats/**"
     };
 
     @Bean
