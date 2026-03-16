@@ -14,6 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -207,5 +212,46 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден с id: " + id));
 
         return mapToDto(user);
+    }
+
+    public void exportUsersToCsv(OutputStream os) {
+
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8))) {
+
+            writer.print('\uFEFF');
+
+            writer.println("ID,Email,Имя,Фамилия,Телефон,Должность,Отдел,Роль,Статус,Дата создания,Дата обновления");
+
+            List<UserEntity> users = userRepository.findAll();
+
+            for (UserEntity user : users) {
+                writer.println(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+                        user.getId(),
+                        escapeCsv(user.getEmail()),
+                        escapeCsv(user.getFirstName()),
+                        escapeCsv(user.getLastName()),
+                        escapeCsv(user.getPhone()),
+                        escapeCsv(user.getPosition()),
+                        escapeCsv(user.getDepartment()),
+                        user.getRole(),
+                        user.getStatus(),
+                        user.getCreatedAt(),
+                        user.getUpdatedAt()
+                ));
+            }
+            writer.flush();
+        }
+    }
+
+    /**
+     * Экранирование значений для корректного CSV.
+     * Оборачивает в кавычки, если значение содержит запятые, кавычки или переводы строк.
+     */
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 }
