@@ -1,0 +1,25 @@
+name: Test SSH Connection
+
+on:
+  push:
+    branches: [ main ]   # или ваша основная ветка, например master
+  workflow_dispatch:      # позволяет запускать вручную
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            echo "✅ SSH connection successful"
+            whoami
+            hostname
+            ls -la ~/
