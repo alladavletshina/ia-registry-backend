@@ -1,0 +1,28 @@
+name: Test SSH Connection
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test SSH connection with Key
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          # Вместо password используем key
+          key: ${{ secrets.DEPLOY_KEY }}
+          # Если при генерации ключа вы задавали парольную фразу (passphrase), раскомментируйте строку ниже:
+          # passphrase: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
+          script: |
+            echo "✅ SSH connection successful via KEY"
+            whoami
+            hostname
+            ls -la ~/
