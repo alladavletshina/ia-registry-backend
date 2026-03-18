@@ -2,8 +2,8 @@ name: Test SSH Connection
 
 on:
   push:
-    branches: [ main ]   # или ваша основная ветка, например master
-  workflow_dispatch:      # позволяет запускать вручную
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   test-ssh:
@@ -12,12 +12,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Test SSH connection
+      - name: Test SSH connection with password
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
+          password: ${{ secrets.DEPLOY_PASSWORD }} 
           script: |
             echo "✅ SSH connection successful"
             whoami
