@@ -17,10 +17,7 @@ jobs:
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
-          # Вместо password используем key
           key: ${{ secrets.DEPLOY_KEY }}
-          # Если при генерации ключа вы задавали парольную фразу (passphrase), раскомментируйте строку ниже:
-          # passphrase: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
           script: |
             echo "✅ SSH connection successful via KEY"
             whoami

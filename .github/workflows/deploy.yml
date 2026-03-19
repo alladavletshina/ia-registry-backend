@@ -1,0 +1,44 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH using key
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+            echo "✅ SSH connection successful via KEY"
+            whoami
+            hostname
+            
+            PROJECT_DIR="/root/ia-registry-backend"
+            
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "Cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git "$PROJECT_DIR"
+            else
+              echo "Updating repository..."
+              cd "$PROJECT_DIR"
+              git pull
+            fi
+            
+            cd "$PROJECT_DIR"
+            
+            echo "Making deploy script executable..."
+            chmod +x ./scripts/start-backend_deploy.sh
+            
+            echo "Running deploy script..."
+            ./scripts/start-backend_deploy.sh
