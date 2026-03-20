@@ -34,10 +34,15 @@ services:
       KC_DB_PASSWORD: password
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin123
-      KC_HOSTNAME: keycloak
-      KC_HOSTNAME_STRICT_HTTPS: false
+      #KC_HOSTNAME: keycloak
+      #KC_HOSTNAME_STRICT_HTTPS: false
+      #KC_HOSTNAME_STRICT: false
+      #KEYCLOAK_FRONTEND_URL: http://155.212.145.19:8080
+      KC_HOSTNAME: api.myiam.ru          # внешний хост (поддомен)
       KC_HOSTNAME_STRICT: false
-      KEYCLOAK_FRONTEND_URL: http://155.212.145.19:8080
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_PROXY: edge                     # важно для работы за reverse proxy
+      KEYCLOAK_FRONTEND_URL: https://api.myiam.ru   # или https://api.myiam.ru
     volumes:
       - ./keycloak-config:/opt/keycloak/data/import
     ports:
