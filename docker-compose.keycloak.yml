@@ -36,6 +36,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin123
       KC_HOSTNAME: keycloak
       KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HOSTNAME_STRICT: false
+      KEYCLOAK_FRONTEND_URL: http://155.212.145.19:8080
     volumes:
       - ./keycloak-config:/opt/keycloak/data/import
     ports:
