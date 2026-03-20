@@ -35,6 +35,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin123
       KC_HOSTNAME: keycloak
+      KC_HOSTNAME_STRICT_HTTPS: false
     volumes:
       - ./keycloak-config:/opt/keycloak/data/import
     ports:
