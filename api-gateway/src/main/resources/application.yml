@@ -154,6 +154,8 @@ spring:
           '[/**]':
             allowedOrigins:
               - "http://localhost:3000"
+              - "https://myiam.ru"
+              - "https://api.myiam.ru"
               - "http://localhost:8082"
             allowedMethods: "*"
             allowedHeaders: "*"
