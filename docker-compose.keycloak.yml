@@ -42,7 +42,7 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_PROXY: edge                     # важно для работы за reverse proxy
-      KEYCLOAK_FRONTEND_URL: https://api.myiam.ru   # или https://api.myiam.ru
+      KEYCLOAK_FRONTEND_URL: https://api.myiam.ru/auth   # или https://api.myiam.ru
     volumes:
       - ./keycloak-config:/opt/keycloak/data/import
     ports:
