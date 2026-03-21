@@ -56,8 +56,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8080/realms/asset-management
-          jwk-set-uri: http://keycloak:8080/realms/asset-management/protocol/openid-connect/certs
+          #issuer-uri: http://keycloak:8080/realms/asset-management
+          #jwk-set-uri: http://keycloak:8080/realms/asset-management/protocol/openid-connect/certs
+          issuer-uri: https://api.myiam.ru/realms/asset-management
+          jwk-set-uri: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
 
 logging:
   level:
