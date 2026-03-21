@@ -56,7 +56,7 @@ services:
     ports:
       - "8082:8082"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
@@ -91,7 +91,7 @@ services:
     ports:
       - "8084:8084"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-assets:5432/assets
@@ -119,7 +119,7 @@ services:
     ports:
       - "8085:8080"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-users:5432/users
@@ -148,7 +148,7 @@ services:
     ports:
       - "8086:8086"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-tasks:5432/tasks
@@ -180,7 +180,7 @@ services:
     ports:
       - "8087:8087"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-notifications:5432/notifications
@@ -217,7 +217,7 @@ services:
     ports:
       - "8088:8088"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-audit:5432/audit_logs
@@ -250,7 +250,7 @@ services:
     ports:
       - "8089:8089"
     extra_hosts:
-      - "api.myiam.ru:127.0.0.1"
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       ASSET_SERVICE_URL: http://asset-service:8084
