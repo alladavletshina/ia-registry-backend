@@ -38,10 +38,10 @@ services:
       #KC_HOSTNAME_STRICT_HTTPS: false
       #KC_HOSTNAME_STRICT: false
       #KEYCLOAK_FRONTEND_URL: http://155.212.145.19:8080
-      KC_HOSTNAME: api.myiam.ru          # внешний хост (поддомен)
+      KC_HOSTNAME: api.myiam.ru
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
-      KC_PROXY: edge                     # важно для работы за reverse proxy
+      KC_PROXY: edge
       KEYCLOAK_FRONTEND_URL: https://api.myiam.ru/auth
     volumes:
       - ./keycloak-config:/opt/keycloak/data/import
@@ -55,6 +55,8 @@ services:
     build: ./api-gateway
     ports:
       - "8082:8082"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
     depends_on:
@@ -86,6 +88,8 @@ services:
     build: asset-service
     ports:
       - "8084:8084"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-assets:5432/assets
@@ -196,6 +200,8 @@ services:
     build: ./audit-service
     ports:
       - "8088:8088"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-audit:5432/audit_logs
