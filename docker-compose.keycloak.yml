@@ -59,6 +59,8 @@ services:
       - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
     depends_on:
       - keycloak
 
@@ -93,6 +95,8 @@ services:
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-assets:5432/assets
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
     depends_on:
       - keycloak
       - postgres-assets
@@ -114,9 +118,13 @@ services:
     build: ./user-service
     ports:
       - "8085:8080"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-users:5432/users
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
 
     depends_on:
       - keycloak
@@ -139,11 +147,15 @@ services:
     build: ./task-service
     ports:
       - "8086:8086"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-tasks:5432/tasks
       ASSET_SERVICE_URL: http://asset-service:8084
       USER_SERVICE_URL: http://user-service:8085
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
     depends_on:
       - keycloak
       - postgres-tasks
@@ -167,6 +179,8 @@ services:
     build: ./notification-service
     ports:
       - "8087:8087"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-notifications:5432/notifications
@@ -177,6 +191,8 @@ services:
       WEBSOCKET_ENABLED: true
       TASK_SERVICE_URL: http://task-service:8086
       USER_SERVICE_URL: http://user-service:8085
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
     depends_on:
       - keycloak
       - postgres-notifications
@@ -208,6 +224,8 @@ services:
       LOG_RETENTION_DAYS: 365
       ASSET_SERVICE_URL: http://asset-service:8084
       USER_SERVICE_URL: http://user-service:8085
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
     depends_on:
       - keycloak
       - postgres-audit
@@ -231,12 +249,16 @@ services:
     build: ./report-service
     ports:
       - "8089:8089"
+    extra_hosts:
+      - "api.myiam.ru:127.0.0.1"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       ASSET_SERVICE_URL: http://asset-service:8084
       USER_SERVICE_URL: http://user-service:8085
       TASK_SERVICE_URL: http://task-service:8086
       AUDIT_SERVICE_URL: http://audit-service:8088
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://api.myiam.ru/realms/asset-management
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://api.myiam.ru/realms/asset-management/protocol/openid-connect/certs
     depends_on:
       - keycloak
       - asset-service
