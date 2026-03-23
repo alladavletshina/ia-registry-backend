@@ -11,8 +11,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -27,12 +25,11 @@ public class FstecSyncService {
     private final ThreatRepository threatRepository;
     private final FstecConfig fstecConfig;
 
-    // Выбор парсера в зависимости от типа
     private final FstecThreatParser xlsxThreatParser;
     private final FstecThreatParser odsThreatParser;
 
     @Retryable(
-            value = {IOException.class},
+            value = {Exception.class}, // перехватываем любые исключения
             maxAttempts = 3,
             backoff = @Backoff(delay = 5000, multiplier = 2)
     )
@@ -63,13 +60,11 @@ public class FstecSyncService {
             }
 
             try (InputStream is = connection.getInputStream()) {
-                // Проверка на пустой поток
                 if (is.available() == 0) {
                     log.error("Входной поток пуст, файл не содержит данных");
                     return;
                 }
 
-                // Выбор парсера
                 FstecThreatParser parser = getParser();
                 if (parser == null) {
                     log.error("Не указан или неверный тип парсера: {}", fstecConfig.getParserType());
@@ -79,7 +74,6 @@ public class FstecSyncService {
                 List<Threat> parsedThreats = parser.parse(is);
                 log.info("Парсинг завершён, получено {} угроз", parsedThreats.size());
 
-                // Сохранение в БД
                 int inserted = 0, updated = 0;
                 for (Threat parsed : parsedThreats) {
                     Threat existing = threatRepository.findById(parsed.getId()).orElse(null);
@@ -106,7 +100,7 @@ public class FstecSyncService {
     }
 
     @Recover
-    public void recover(IOException e) {
+    public void recover(Exception e) {
         log.error("Все попытки синхронизации не удались", e);
         // Здесь можно отправить уведомление администратору
     }
