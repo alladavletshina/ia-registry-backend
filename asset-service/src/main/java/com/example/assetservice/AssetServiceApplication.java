@@ -13,9 +13,6 @@ public class AssetServiceApplication {
 
     public static void main(String[] args) {
 
-        // Отключаем проверку SSL (только для разработки/тестирования!)
-        SSLUtil.disableSSLVerification();
-
         SpringApplication.run(AssetServiceApplication.class, args);
     }
 
