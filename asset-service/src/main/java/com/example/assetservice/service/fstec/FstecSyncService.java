@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -24,85 +22,56 @@ public class FstecSyncService {
 
     private final ThreatRepository threatRepository;
     private final FstecConfig fstecConfig;
-
     private final FstecThreatParser xlsxThreatParser;
     private final FstecThreatParser odsThreatParser;
 
     @Retryable(
-            value = {Exception.class}, // перехватываем любые исключения
+            value = {Exception.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 5000, multiplier = 2)
     )
     @Transactional
     public void syncThreats() {
-        log.info("Начало синхронизации угроз из БДУ ФСТЭК. URL: {}", fstecConfig.getThreatUrl());
+        log.info("Начало синхронизации угроз из встроенного файла");
 
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(fstecConfig.getThreatUrl());
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(30000);
-            connection.connect();
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                log.error("Не удалось скачать файл. HTTP код: {}", responseCode);
+        // Читаем файл из classpath (resources)
+        try (InputStream is = getClass().getResourceAsStream("/thrlist.xlsx")) {
+            if (is == null) {
+                log.error("Файл thrlist.xlsx не найден в classpath. Проверьте, что файл находится в src/main/resources.");
                 return;
             }
 
-            int contentLength = connection.getContentLength();
-            if (contentLength <= 0) {
-                log.warn("Размер файла не определён или файл пуст (contentLength={})", contentLength);
-            } else {
-                log.info("Размер файла: {} байт", contentLength);
+            FstecThreatParser parser = getParser();
+            if (parser == null) {
+                log.error("Не указан или неверный тип парсера: {}", fstecConfig.getParserType());
+                return;
             }
 
-            try (InputStream is = connection.getInputStream()) {
-                if (is.available() == 0) {
-                    log.error("Входной поток пуст, файл не содержит данных");
-                    return;
-                }
+            List<Threat> parsedThreats = parser.parse(is);
+            log.info("Парсинг завершён, получено {} угроз", parsedThreats.size());
 
-                FstecThreatParser parser = getParser();
-                if (parser == null) {
-                    log.error("Не указан или неверный тип парсера: {}", fstecConfig.getParserType());
-                    return;
+            int inserted = 0, updated = 0;
+            for (Threat parsed : parsedThreats) {
+                Threat existing = threatRepository.findById(parsed.getId()).orElse(null);
+                if (existing == null) {
+                    threatRepository.save(parsed);
+                    inserted++;
+                } else {
+                    updateThreat(existing, parsed);
+                    threatRepository.save(existing);
+                    updated++;
                 }
-
-                List<Threat> parsedThreats = parser.parse(is);
-                log.info("Парсинг завершён, получено {} угроз", parsedThreats.size());
-
-                int inserted = 0, updated = 0;
-                for (Threat parsed : parsedThreats) {
-                    Threat existing = threatRepository.findById(parsed.getId()).orElse(null);
-                    if (existing == null) {
-                        threatRepository.save(parsed);
-                        inserted++;
-                    } else {
-                        updateThreat(existing, parsed);
-                        threatRepository.save(existing);
-                        updated++;
-                    }
-                }
-                log.info("Синхронизация завершена. Добавлено: {}, обновлено: {}", inserted, updated);
             }
-
+            log.info("Синхронизация завершена. Добавлено: {}, обновлено: {}", inserted, updated);
         } catch (Exception e) {
             log.error("Ошибка при синхронизации: {}", e.getMessage(), e);
-            throw new RuntimeException("Ошибка синхронизации с ФСТЭК", e);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
+            throw new RuntimeException("Ошибка синхронизации", e);
         }
     }
 
     @Recover
     public void recover(Exception e) {
         log.error("Все попытки синхронизации не удались", e);
-        // Здесь можно отправить уведомление администратору
     }
 
     private FstecThreatParser getParser() {
