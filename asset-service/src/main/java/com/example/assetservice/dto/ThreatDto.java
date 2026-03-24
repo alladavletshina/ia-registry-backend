@@ -1,6 +1,7 @@
 package com.example.assetservice.dto;
 
 import com.example.assetservice.model.entity.Threat;
+import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,7 +10,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class ThreatDto {
-    private String id;
+    private Long id;
     private String name;
     private String description;
     private String source;

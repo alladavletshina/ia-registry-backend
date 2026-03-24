@@ -32,7 +32,12 @@ public class OdsThreatParser implements FstecThreatParser {
             if (row == null) continue;
 
             Threat threat = new Threat();
-            threat.setId(getCellValue(row.getCellByIndex(0)));
+            String idStr = getCellValue(row.getCellByIndex(0));
+            if (!idStr.isEmpty()) {
+                threat.setId(Long.parseLong(idStr));
+            } else {
+                threat.setId(null);
+            }
             threat.setName(getCellValue(row.getCellByIndex(1)));
             threat.setDescription(getCellValue(row.getCellByIndex(2)));
             threat.setSource(getCellValue(row.getCellByIndex(3)));

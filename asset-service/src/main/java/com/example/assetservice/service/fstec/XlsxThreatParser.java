@@ -31,7 +31,17 @@ public class XlsxThreatParser implements FstecThreatParser {
                 if (row == null) continue;
 
                 Threat threat = new Threat();
-                threat.setId(getStringCellValue(row.getCell(0)));          // Идентификатор
+                Cell idCell = row.getCell(0);
+                if (idCell != null) {
+                    if (idCell.getCellType() == CellType.NUMERIC) {
+                        threat.setId((long) idCell.getNumericCellValue());
+                    } else {
+                        String idStr = getStringCellValue(idCell);
+                        threat.setId(Long.parseLong(idStr));
+                    }
+                } else {
+                    threat.setId(null); // или пропустить строку
+                }         // Идентификатор
                 threat.setName(getStringCellValue(row.getCell(1)));        // Наименование
                 threat.setDescription(getStringCellValue(row.getCell(2))); // Описание
                 threat.setSource(getStringCellValue(row.getCell(3)));      // Источник

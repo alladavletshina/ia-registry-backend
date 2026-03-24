@@ -15,7 +15,7 @@ public class Threat {
 
     /* Идентификатор УБИ (например, "УБИ.004")*/
     @Id
-    private String id;
+    private Long id;
 
     /*Наименование УБИ*/
     @Column(nullable = false, length = 500)

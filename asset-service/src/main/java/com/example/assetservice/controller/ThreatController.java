@@ -44,7 +44,7 @@ public class ThreatController {
     @Operation(summary = "Получить угрозу по ID",
             description = "Возвращает детальную информацию об угрозе по её идентификатору (например, '1')")
     public ThreatDto getThreat(
-            @PathVariable @Parameter(description = "Идентификатор угрозы (например, '1')") String id) {
+            @PathVariable @Parameter(description = "Идентификатор угрозы (например, '1')") Long id) {
         Threat threat = threatRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Угроза не найдена"));
         return ThreatDto.fromEntity(threat);
