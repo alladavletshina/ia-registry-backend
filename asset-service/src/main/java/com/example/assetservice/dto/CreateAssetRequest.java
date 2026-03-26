@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
 @Data
 public class CreateAssetRequest {
 
@@ -30,4 +33,22 @@ public class CreateAssetRequest {
     private String description;
     private String location;
     private String tags;
+
+    /*стоимость*/
+    private BigDecimal value;
+
+    /*вес конфиденциальности*/
+    private Integer weightC = 1;
+
+    /*вес целостности*/
+    private Integer weightI = 1;
+
+    /*вес доступности*/
+    private Integer weightA = 1;
+
+    /*правовой статус*/
+    private String legalStatus;
+
+    /*идентификатор группы активов*/
+    private UUID groupId;
 }

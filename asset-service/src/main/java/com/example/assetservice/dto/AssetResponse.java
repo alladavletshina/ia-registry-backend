@@ -4,7 +4,9 @@ import com.example.assetservice.model.AssetStatus;
 import com.example.assetservice.model.CIA;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 public class AssetResponse {
@@ -29,4 +31,13 @@ public class AssetResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private BigDecimal value;
+    private Integer weightC;
+    private Integer weightI;
+    private Integer weightA;
+    private String legalStatus;
+    private UUID groupId;
+
+    /*название группы*/
+    private String groupName;
 }

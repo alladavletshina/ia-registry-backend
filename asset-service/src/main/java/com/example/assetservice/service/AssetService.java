@@ -4,6 +4,8 @@ import com.example.assetservice.dto.AssetResponse;
 import com.example.assetservice.dto.AuditEventDto;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
+import com.example.assetservice.model.entity.AssetGroup;
+import com.example.assetservice.repository.AssetGroupRepository;
 import com.example.assetservice.repository.AssetRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,8 @@ public class AssetService {
 
     private final AssetRepository assetRepository;
     private final AuditEventPublisher auditEventPublisher;
+    private final AssetGroupRepository assetGroupRepository;
+    private final RiskCalculationService riskCalculationService;
 
     @Transactional
     public Asset createAsset(CreateAssetRequest request, Jwt jwt, String clientIp) {
@@ -40,7 +44,23 @@ public class AssetService {
         asset.setLocation(request.getLocation());
         asset.setTags(request.getTags());
 
+        // Новые поля для расчетов
+        asset.setValue(request.getValue());
+        asset.setWeightC(request.getWeightC() != null ? request.getWeightC() : 1);
+        asset.setWeightI(request.getWeightI() != null ? request.getWeightI() : 1);
+        asset.setWeightA(request.getWeightA() != null ? request.getWeightA() : 1);
+        asset.setLegalStatus(request.getLegalStatus());
+
+        if (request.getGroupId() != null) {
+            AssetGroup group = assetGroupRepository.findById(request.getGroupId())
+                    .orElseThrow(() -> new RuntimeException("Группа активов не найдена"));
+            asset.setGroup(group);
+        }
+
         Asset saved = assetRepository.save(asset);
+
+        // Пересчёт риска (пока угроз нет, риск будет 0, но создаётся запись в risk_history)
+        riskCalculationService.calculateRiskForAsset(saved);
 
         /* Отправка события аудита */
         AuditEventDto event = new AuditEventDto();
@@ -81,6 +101,17 @@ public class AssetService {
         response.setTags(asset.getTags());
         response.setCreatedAt(asset.getCreatedAt());
         response.setUpdatedAt(asset.getUpdatedAt());
+
+        // Новые поля для расчетов
+        response.setValue(asset.getValue());
+        response.setWeightC(asset.getWeightC());
+        response.setWeightI(asset.getWeightI());
+        response.setWeightA(asset.getWeightA());
+        response.setLegalStatus(asset.getLegalStatus());
+        if (asset.getGroup() != null) {
+            response.setGroupId(asset.getGroup().getId());
+            response.setGroupName(asset.getGroup().getName());
+        }
         return response;
     }
 
@@ -94,8 +125,9 @@ public class AssetService {
     public AssetResponse updateAsset(long id, @Valid CreateAssetRequest request, Jwt jwt, String clientIp) {
 
         Asset asset = assetRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Актив с id" + id + " не найден"));
+                .orElseThrow(() -> new RuntimeException("Актив с id " + id + " не найден"));
 
+        // Обновление существующих полей
         asset.setName(request.getName());
         asset.setCategory(request.getCategory());
         asset.setOwnerId(request.getOwnerId());
@@ -107,22 +139,43 @@ public class AssetService {
         asset.setDescription(request.getDescription());
         asset.setLocation(request.getLocation());
         asset.setTags(request.getTags());
+
+        // Новые поля для расчетов
+        asset.setValue(request.getValue());
+        asset.setWeightC(request.getWeightC() != null ? request.getWeightC() : 1);
+        asset.setWeightI(request.getWeightI() != null ? request.getWeightI() : 1);
+        asset.setWeightA(request.getWeightA() != null ? request.getWeightA() : 1);
+        asset.setLegalStatus(request.getLegalStatus());
+
+        if (request.getGroupId() != null) {
+            AssetGroup group = assetGroupRepository.findById(request.getGroupId())
+                    .orElseThrow(() -> new RuntimeException("Группа активов не найдена"));
+            asset.setGroup(group);
+        } else {
+            asset.setGroup(null);
+        }
+
         asset.setUpdatedAt(LocalDateTime.now());
 
-        /* Отправка события аудита */
+        Asset saved = assetRepository.save(asset);
+
+        // Пересчёт риска после обновления
+        riskCalculationService.calculateRiskForAsset(saved);
+
+        // Отправка события аудита
         AuditEventDto event = new AuditEventDto();
         event.setUserId(UUID.fromString(jwt.getSubject()));
         event.setUsername(jwt.getClaim("preferred_username"));
         event.setAction("UPDATE_ASSET");
-        event.setDetails(String.format("Изменен актив: %s (id=%d)", asset.getName(), asset.getId()));
+        event.setDetails(String.format("Изменен актив: %s (id=%d)", saved.getName(), saved.getId()));
         event.setIp(clientIp);
         event.setSeverity("INFO");
         event.setServiceName("asset-service");
-        event.setObjectId(String.valueOf(asset.getId()));
+        event.setObjectId(String.valueOf(saved.getId()));
         event.setObjectType("Asset");
 
         auditEventPublisher.publishEvent(event);
-        return mapToResponse(asset);
+        return mapToResponse(saved);
     }
 
     @Transactional
@@ -154,5 +207,10 @@ public class AssetService {
         return assetRepository.findAllByOwnerId(ownerId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+
+    public List<AssetGroup> getAllGroups() {
+        return assetGroupRepository.findAll();
     }
 }

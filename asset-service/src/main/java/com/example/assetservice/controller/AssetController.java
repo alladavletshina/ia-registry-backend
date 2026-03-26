@@ -3,6 +3,7 @@ package com.example.assetservice.controller;
 import com.example.assetservice.dto.AssetResponse;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
+import com.example.assetservice.model.entity.AssetGroup;
 import com.example.assetservice.service.AssetService;
 import com.example.assetservice.utils.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -132,5 +133,10 @@ public class AssetController {
         List<AssetResponse> assets = assetService.getAssetByOwnerId(ownerId);
         return ResponseEntity.ok(assets);
 
+    }
+
+    @GetMapping("/groups")
+    public List<AssetGroup> getAllGroups() {
+        return assetService.getAllGroups();
     }
 }
