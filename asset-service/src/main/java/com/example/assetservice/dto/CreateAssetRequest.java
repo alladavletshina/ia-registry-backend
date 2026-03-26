@@ -14,7 +14,7 @@ public class CreateAssetRequest {
 
     @NotBlank
     public String name;
-    private String category;
+
     private String ownerId;
 
     @NotNull

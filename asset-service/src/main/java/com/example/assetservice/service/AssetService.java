@@ -33,7 +33,6 @@ public class AssetService {
     public Asset createAsset(CreateAssetRequest request, Jwt jwt, String clientIp) {
         Asset asset = new Asset();
         asset.setName(request.getName());
-        asset.setCategory(request.getCategory());
         asset.setOwnerId(request.getOwnerId());
         asset.setStatus(request.getStatus());
         asset.setConfidentiality(request.getConfidentiality());
@@ -89,7 +88,6 @@ public class AssetService {
         AssetResponse response = new AssetResponse();
         response.setId(asset.getId());
         response.setName(asset.getName());
-        response.setCategory(asset.getCategory());
         response.setOwnerId(asset.getOwnerId());
         response.setStatus(asset.getStatus());
         response.setConfidentiality(asset.getConfidentiality());
@@ -129,7 +127,6 @@ public class AssetService {
 
         // Обновление существующих полей
         asset.setName(request.getName());
-        asset.setCategory(request.getCategory());
         asset.setOwnerId(request.getOwnerId());
         asset.setStatus(request.getStatus());
         asset.setConfidentiality(request.getConfidentiality());

@@ -14,7 +14,6 @@ public class AssetResponse {
     private long id;
 
     public String name;
-    private String category;
     private String ownerId;
 
     private AssetStatus status;

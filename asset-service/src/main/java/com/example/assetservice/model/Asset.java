@@ -19,8 +19,6 @@ public class Asset {
     @NotBlank
     private String name;
 
-    private String category;
-
     @Column(name = "owner_id")
     private String ownerId;
 
