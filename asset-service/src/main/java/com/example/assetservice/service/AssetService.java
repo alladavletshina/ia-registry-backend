@@ -5,8 +5,10 @@ import com.example.assetservice.dto.AuditEventDto;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
 import com.example.assetservice.model.entity.AssetGroup;
+import com.example.assetservice.model.entity.Risk;
 import com.example.assetservice.repository.AssetGroupRepository;
 import com.example.assetservice.repository.AssetRepository;
+import com.example.assetservice.repository.RiskRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,7 @@ public class AssetService {
     private final AuditEventPublisher auditEventPublisher;
     private final AssetGroupRepository assetGroupRepository;
     private final RiskCalculationService riskCalculationService;
+    private final RiskRepository riskRepository;
 
     @Transactional
     public Asset createAsset(CreateAssetRequest request, Jwt jwt, String clientIp) {
@@ -209,5 +212,15 @@ public class AssetService {
 
     public List<AssetGroup> getAllGroups() {
         return assetGroupRepository.findAll();
+    }
+
+    public List<Risk> getLatestRisk(long id) {
+
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        List<Risk> risks = riskRepository.findByAssetOrderByCalculationDateDesc(asset);
+
+        return risks;
     }
 }

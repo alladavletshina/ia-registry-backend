@@ -1,9 +1,11 @@
 package com.example.assetservice.controller;
 
 import com.example.assetservice.dto.AssetResponse;
+import com.example.assetservice.dto.RiskDto;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
 import com.example.assetservice.model.entity.AssetGroup;
+import com.example.assetservice.model.entity.Risk;
 import com.example.assetservice.service.AssetService;
 import com.example.assetservice.utils.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -138,5 +141,16 @@ public class AssetController {
     @GetMapping("/groups")
     public List<AssetGroup> getAllGroups() {
         return assetService.getAllGroups();
+    }
+
+    @GetMapping("/{id}/risk/latest")
+    public ResponseEntity<RiskDto> getLatestRisk(@PathVariable long id) {
+
+        List<Risk> risks = assetService.getLatestRisk(id);
+
+        if (risks.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(RiskDto.fromEntity(risks.get(0)));
     }
 }
