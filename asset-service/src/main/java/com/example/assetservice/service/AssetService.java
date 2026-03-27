@@ -113,6 +113,12 @@ public class AssetService {
             response.setGroupId(asset.getGroup().getId());
             response.setGroupName(asset.getGroup().getName());
         }
+
+        // Получаем последний риск для актива
+        List<Risk> risks = riskRepository.findByAssetOrderByCalculationDateDesc(asset);
+        if (!risks.isEmpty()) {
+            response.setLatestRisk(risks.get(0).getCalculatedRisk());
+        }
         return response;
     }
 

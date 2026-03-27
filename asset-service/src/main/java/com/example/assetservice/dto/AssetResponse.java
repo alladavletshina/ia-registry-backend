@@ -37,6 +37,8 @@ public class AssetResponse {
     private String legalStatus;
     private UUID groupId;
 
+    private BigDecimal latestRisk;
+
     /*название группы*/
     private String groupName;
 }
