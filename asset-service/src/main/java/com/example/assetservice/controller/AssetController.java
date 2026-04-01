@@ -23,7 +23,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -37,7 +36,7 @@ public class AssetController {
     private final AssetService assetService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('admin')")
     @Operation(summary = "Создать новый актив", description = "Только для администраторов")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Актив успешно создан",
@@ -57,7 +56,7 @@ public class AssetController {
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Получить список всех активов")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Список активов",
@@ -71,7 +70,7 @@ public class AssetController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Получить актив по ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Актив найден",
@@ -86,7 +85,7 @@ public class AssetController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Обновить актив", description = "Полное обновление всех полей")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Актив обновлён",
@@ -109,7 +108,7 @@ public class AssetController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Удалить актив", description = "Только для администраторов")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Актив успешно удалён"),
@@ -128,7 +127,7 @@ public class AssetController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Получить активы, принадлежащие текущему пользователю", description = "Только для пользователей")
     public ResponseEntity<List<AssetResponse>> getMyAssets(@AuthenticationPrincipal Jwt jwt) {
 
@@ -139,11 +138,13 @@ public class AssetController {
     }
 
     @GetMapping("/groups")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     public List<AssetGroup> getAllGroups() {
         return assetService.getAllGroups();
     }
 
     @GetMapping("/{id}/risk/latest")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     public ResponseEntity<RiskDto> getLatestRisk(@PathVariable long id) {
 
         List<Risk> risks = assetService.getLatestRisk(id);

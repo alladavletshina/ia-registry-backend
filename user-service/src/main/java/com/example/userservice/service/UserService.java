@@ -11,6 +11,8 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,6 +71,11 @@ public class UserService {
             );
             log.info("Пользователь создан в Keycloak: {}", keycloakUserId);
 
+            // Создаём роль "user", если её нет
+            keycloakClient.createRealmRole("user");
+            // Назначаем роль пользователю
+            keycloakClient.assignRealmRole(keycloakUserId, "user");
+
             //Обновляем запись в своей БД
             savedUser.setKeycloakId(keycloakUserId);
             savedUser.setStatus(UserStatus.ACTIVE);
@@ -75,19 +83,6 @@ public class UserService {
 
             UserEntity finalUser = userRepository.save(savedUser);
             log.info("Запись пользователя активирована: {}", finalUser.getId());
-
-            //Публикуем событие в RabbitMQ
-            /*UserRegisteredEvent event = UserRegisteredEvent.builder()
-                    .userId(finalUser.getId())
-                    .keycloakId(keycloakUserId)
-                    .email(finalUser.getEmail())
-                    .firstName(finalUser.getFirstName())
-                    .lastName(finalUser.getLastName())
-                    .timestamp(LocalDateTime.now())
-                    .build();
-
-            eventPublisher.publishUserRegistered(event);
-            log.info("Опубликовано событие user.registered для: {}", finalUser.getEmail());*/
 
             AuditEventDto event = new AuditEventDto();
             event.setUserId(UUID.fromString(keycloakUserId));
@@ -254,4 +249,5 @@ public class UserService {
         }
         return value;
     }
+
 }

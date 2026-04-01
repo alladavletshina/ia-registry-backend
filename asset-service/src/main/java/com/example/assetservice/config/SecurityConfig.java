@@ -29,9 +29,7 @@ public class SecurityConfig {
             "/api/assets/health",
             "/api/assets/actuator/health",
             "/actuator/health",
-            "/actuator/info",
-            "/api/assets/threats",
-            "/api/assets/threats/**"
+            "/actuator/info"
     };
 
     @Bean
@@ -43,10 +41,10 @@ public class SecurityConfig {
                         // Публичные эндпоинты (если не попали в web.ignoring)
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/assets/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/assets/**").hasRole("admin")
-                        .requestMatchers(HttpMethod.DELETE, "/api/assets/**").hasRole("admin")
-                        .requestMatchers(HttpMethod.PUT, "/api/assets/**").hasRole("admin")
+                        .requestMatchers(HttpMethod.GET, "/api/assets/**").hasAnyRole("admin", "user")
+                        .requestMatchers(HttpMethod.POST, "/api/assets/**").hasAnyRole("admin", "user")
+                        .requestMatchers(HttpMethod.DELETE, "/api/assets/**").hasAnyRole("admin", "user")
+                        .requestMatchers(HttpMethod.PUT, "/api/assets/**").hasAnyRole("admin", "user")
                         .requestMatchers("/api/asset/admin/**").hasRole("admin")
 
                         // Все остальные запросы требуют аутентификации

@@ -7,6 +7,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -139,6 +140,35 @@ public class KeycloakAdminClient {
         } catch (Exception e) {
             log.error("Ошибка удаления пользователя из Keycloak: {}", e.getMessage(), e);
             throw new RuntimeException("Не удалось удалить пользователя из Keycloak");
+        }
+    }
+
+    /**
+     * Создаёт роль в realm, если её ещё нет.
+     */
+    public void createRealmRole(String roleName) {
+        try {
+            RealmResource realmResource = keycloak.realm(targetRealm);
+            RoleRepresentation role = new RoleRepresentation(roleName, null, false);
+            realmResource.roles().create(role);
+            log.info("Роль '{}' создана в realm '{}'", roleName, targetRealm);
+        } catch (Exception e) {
+            log.warn("Роль '{}' уже существует или не может быть создана: {}", roleName, e.getMessage());
+        }
+    }
+
+    /**
+     * Назначает роль пользователю.
+     */
+    public void assignRealmRole(String userId, String roleName) {
+        try {
+            RealmResource realmResource = keycloak.realm(targetRealm);
+            RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();
+            realmResource.users().get(userId).roles().realmLevel().add(Collections.singletonList(role));
+            log.info("Роль '{}' назначена пользователю {}", roleName, userId);
+        } catch (Exception e) {
+            log.error("Ошибка назначения роли '{}' пользователю {}: {}", roleName, userId, e.getMessage(), e);
+            throw new RuntimeException("Не удалось назначить роль пользователю");
         }
     }
 }

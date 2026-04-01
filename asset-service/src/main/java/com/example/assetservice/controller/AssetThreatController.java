@@ -35,6 +35,7 @@ public class AssetThreatController {
     private final RiskCalculationService riskCalculationService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Получить все угрозы, привязанные к активу")
     public List<AssetThreatDto> getAssetThreats(@PathVariable Long assetId) {
         Asset asset = assetRepository.findById(assetId)
@@ -46,7 +47,7 @@ public class AssetThreatController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Привязать угрозу к активу")
     public ResponseEntity<AssetThreatDto> addThreat(
             @PathVariable Long assetId,
@@ -81,7 +82,7 @@ public class AssetThreatController {
     }
 
     @PutMapping("/{threatId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Обновить параметры привязанной угрозы")
     public ResponseEntity<AssetThreatDto> updateThreat(
             @PathVariable Long assetId,
@@ -112,7 +113,7 @@ public class AssetThreatController {
     }
 
     @DeleteMapping("/{threatId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('admin')")
     @Operation(summary = "Отвязать угрозу от актива")
     public ResponseEntity<Void> removeThreat(
             @PathVariable Long assetId,
