@@ -64,3 +64,23 @@ springdoc:
     default-models-expand-depth: 3
     try-it-out-enabled: true
     filter: true
+
+# Настройки для сбора метрик производительности
+performance:
+  services:
+    - name: API Gateway
+      url: http://api-gateway:8082/actuator/health
+    - name: Auth Service
+      url: http://auth-service:8083/actuator/health
+    - name: Asset Service
+      url: http://asset-service:8084/actuator/health
+    - name: User Service
+      url: http://user-service:8085/actuator/health
+    - name: Task Service
+      url: http://task-service:8086/actuator/health
+    - name: Notification Service
+      url: http://notification-service:8087/actuator/health
+    - name: Audit Service
+      url: http://audit-service:8088/actuator/health
+    - name: Report Service
+      url: http://report-service:8089/actuator/health

@@ -3,7 +3,6 @@ package com.example.reportservice.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -24,55 +23,31 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Публичные эндпоинты (оставим для фильтрации, но лучше использовать web.ignoring)
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/reports/health",
-            "/api/reports/actuator/health",
-            "/actuator/health",
-            "/actuator/info"
-    };
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Публичные эндпоинты (если не попали в web.ignoring)
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/api/reports/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/reports/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("admin")
-                        .requestMatchers(HttpMethod.PUT, "/api/reports/**").hasRole("admin")
-                        .requestMatchers("/api/reports/admin/**").hasRole("admin")
-
-                        // Все остальные запросы требуют аутентификации
+                        // Публичные эндпоинты (health и документация)
+                        .requestMatchers("/api/reports/health", "/actuator/health", "/actuator/info").permitAll()
+                        // Все отчёты – только для администраторов
+                        .requestMatchers("/api/reports/**").hasRole("admin")
+                        // Все остальные запросы требуют аутентификации (на всякий случай)
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                        )
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 );
-
         return http.build();
     }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
-
                 "/swagger-ui/**",
                 "/api-docs/**",
                 "/swagger-ui.html",
-
-                // Actuator health endpoints
-                "/actuator/health",
-                "/actuator/info",
-                "/api/assets/health",
-                "/api/assets/actuator/health",
-
                 "/error"
         );
     }
@@ -85,11 +60,7 @@ public class SecurityConfig {
     }
 }
 
-/**
- * Конвертер ролей из JWT токена Keycloak в GrantedAuthority
- */
 class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
-
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");

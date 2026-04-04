@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class AuditEventDTO {
     private String timestamp;
-    private String user;
+    private String username;
     private String action;
     private String details;
     private String ip;

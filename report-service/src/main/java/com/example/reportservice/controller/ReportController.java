@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class ReportController {
     private final AuditServiceClient auditClient;
 
     @GetMapping("/overview")
+    @PreAuthorize("hasAnyRole('admin')")
     @Operation(summary = "Обзорная статистика")
     public OverviewReportDTO getOverview(
             @RequestParam(defaultValue = "month") String period) {
@@ -39,6 +41,7 @@ public class ReportController {
     }
 
     @GetMapping("/assets")
+    @PreAuthorize("hasAnyRole('admin')")
     @Operation(summary = "Отчёт по активам")
     public AssetsReportDTO getAssets(
             @RequestParam(defaultValue = "month") String period) {
@@ -46,6 +49,7 @@ public class ReportController {
     }
 
     @GetMapping("/users")
+    @PreAuthorize("hasAnyRole('admin')")
     @Operation(summary = "Активность пользователей")
     public UsersReportDTO getUsers(
             @RequestParam(defaultValue = "month") String period) {
@@ -53,6 +57,7 @@ public class ReportController {
     }
 
     @GetMapping("/security")
+    @PreAuthorize("hasAnyRole('admin')")
     @Operation(summary = "Отчёт по безопасности")
     public SecurityReportDTO getSecurity(
             @RequestParam(defaultValue = "month") String period) {
@@ -60,6 +65,7 @@ public class ReportController {
     }
 
     @GetMapping("/performance")
+    @PreAuthorize("hasAnyRole('admin')")
     @Operation(summary = "Производительность системы")
     public PerformanceReportDTO getPerformance(
             @RequestParam(defaultValue = "month") String period) {
@@ -67,6 +73,7 @@ public class ReportController {
     }
 
     @GetMapping("/check-services")
+    @PreAuthorize("hasAnyRole('admin')")
     public ResponseEntity<Map<String, Object>> checkServices(@AuthenticationPrincipal Jwt jwt) {
         Map<String, Object> result = new HashMap<>();
 

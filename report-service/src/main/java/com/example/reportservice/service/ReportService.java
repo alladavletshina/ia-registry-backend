@@ -1,13 +1,16 @@
 package com.example.reportservice.service;
 
 import com.example.reportservice.client.*;
+import com.example.reportservice.config.PerformanceProperties;
 import com.example.reportservice.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,31 +24,51 @@ public class ReportService {
     private final AssetServiceClient assetClient;
     private final TaskServiceClient taskClient;
     private final AuditServiceClient auditClient;
+    private final RestTemplate restTemplate;
+    private final PerformanceProperties performanceProperties;
 
     @Cacheable(value = "overview", key = "#period")
     public OverviewReportDTO getOverviewReport(String period) {
         log.info("Generating overview report for period: {}", period);
-        List<AssetDTO> assets = assetClient.getAllAssets();
-        List<UserDTO> users = userClient.getAllUsers();
-        TaskStatsDTO taskStats = taskClient.getTaskStats();
+        List<AssetDTO> assets = Collections.emptyList();
+        List<UserDTO> users = Collections.emptyList();
+        TaskStatsDTO taskStats = new TaskStatsDTO();
+        try {
+            assets = assetClient.getAllAssets();
+        } catch (Exception e) {
+            log.error("Failed to fetch assets: {}", e.getMessage(), e);
+        }
+        try {
+            users = userClient.getAllUsers();
+        } catch (Exception e) {
+            log.error("Failed to fetch users: {}", e.getMessage(), e);
+        }
+        try {
+            taskStats = taskClient.getTaskStats();
+        } catch (Exception e) {
+            log.error("Failed to fetch task stats: {}", e.getMessage(), e);
+        }
 
         OverviewReportDTO report = new OverviewReportDTO();
         report.setTotalAssets(assets.size());
         report.setTotalUsers(users.size());
         report.setPendingReviews((int) taskStats.getPending());
         report.setHighRiskAssets(calculateHighRiskAssets(assets));
-
-        report.setCategoryDistribution(buildCategoryDistribution(assets));
+        report.setCategoryDistribution(buildGroupDistribution(assets));
         report.setCiaDistribution(buildCiaDistribution(assets));
         return report;
     }
 
     @Cacheable(value = "assets", key = "#period")
     public AssetsReportDTO getAssetsReport(String period) {
-        List<AssetDTO> assets = assetClient.getAllAssets();
+        List<AssetDTO> assets = Collections.emptyList();
+        try {
+            assets = assetClient.getAllAssets();
+        } catch (Exception e) {
+            log.error("Failed to fetch assets for report: {}", e.getMessage(), e);
+        }
         AssetsReportDTO report = new AssetsReportDTO();
-
-        report.setByCategory(groupByCategory(assets));
+        report.setByCategory(groupByGroupName(assets));
         report.setByStatus(groupByStatus(assets));
         report.setByConfidentiality(groupByConfidentiality(assets));
         report.setGrowthTrend(buildGrowthTrend(assets, period));
@@ -54,12 +77,20 @@ public class ReportService {
 
     @Cacheable(value = "users", key = "#period")
     public UsersReportDTO getUsersReport(String period) {
-        List<UserDTO> users = userClient.getAllUsers();
-        // В реальности нужно больше данных (логины, действия). Для демо используем заглушки.
+        List<AuditEventDTO> events = Collections.emptyList();
+        try {
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = calculateStartDate(period, endDate);
+            events = auditClient.getReportData(startDate.toString(), endDate.toString());
+            log.info("Fetched {} audit events for users report", events.size());
+        } catch (Exception e) {
+            log.error("Failed to fetch audit events for users report: {}", e.getMessage(), e);
+        }
+
         UsersReportDTO report = new UsersReportDTO();
-        report.setActivityByRole(buildRoleActivity(users));
-        report.setDailyActivity(buildDailyActivity());
-        report.setTopUsers(buildTopUsers(users));
+        report.setActivityByRole(buildRoleActivity(events));
+        report.setDailyActivity(buildDailyActivity(events));
+        report.setTopUsers(buildTopUsers(events));
         return report;
     }
 
@@ -77,11 +108,10 @@ public class ReportService {
             SecurityReportDTO report = new SecurityReportDTO();
             report.setRiskDistribution(buildRiskDistribution(events));
             report.setAuditEvents(buildAuditEventsTimeline(events));
-            report.setComplianceStatus(buildComplianceStatus()); // этот метод уже есть
+            report.setComplianceStatus(buildComplianceStatus());
             return report;
         } catch (Exception e) {
             log.error("Error in getSecurityReport", e);
-            // Вместо проброса исключения вернём отчёт с нулевыми данными
             SecurityReportDTO fallback = new SecurityReportDTO();
             fallback.setRiskDistribution(List.of(
                     createRiskCount("Высокий риск", 0, "#ef4444"),
@@ -101,30 +131,94 @@ public class ReportService {
             case "month" -> endDate.minusMonths(1);
             case "quarter" -> endDate.minusMonths(3);
             case "year" -> endDate.minusYears(1);
-            default -> endDate.minusMonths(1); // по умолчанию месяц
+            default -> endDate.minusMonths(1);
         };
     }
 
+    // ================== Методы для отчёта Performance (реальные метрики) ==================
+
     @Cacheable(value = "performance", key = "#period")
     public PerformanceReportDTO getPerformanceReport(String period) {
-        // Для демо возвращаем фиксированные данные
+        log.info("Generating performance report for period: {}", period);
+
+        List<AuditEventDTO> events = Collections.emptyList();
+        try {
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = calculateStartDate(period, endDate);
+            events = auditClient.getReportData(startDate.toString(), endDate.toString());
+        } catch (Exception e) {
+            log.error("Failed to fetch audit events for performance report: {}", e.getMessage(), e);
+        }
+
+        List<ServiceHealthMetric> metrics = collectServiceMetrics();
+        double uptime = calculateUptime(metrics);
+        double avgResponseTime = calculateAverageResponseTime(metrics);
+        Map<String, Integer> errors = collectErrorsFromAudit(events);
+
         PerformanceReportDTO report = new PerformanceReportDTO();
-        report.setUptime(99.8);
-        report.setAvgResponseTime(172);
-        report.setPeakLoad(2450);
-        report.setErrors(Map.of("400", 12, "401", 5, "404", 8, "500", 2));
-        report.setResponseTimes(List.of(
-                createHourValue("00:00", 142),
-                createHourValue("04:00", 138),
-                createHourValue("08:00", 156),
-                createHourValue("12:00", 234),
-                createHourValue("16:00", 198),
-                createHourValue("20:00", 167)
-        ));
+        report.setUptime(uptime);
+        report.setAvgResponseTime((int) avgResponseTime);
+        report.setErrors(errors);
         return report;
     }
 
-    // ================== Вспомогательные методы ==================
+    private List<ServiceHealthMetric> collectServiceMetrics() {
+        List<ServiceHealthMetric> metrics = new ArrayList<>();
+        for (PerformanceProperties.ServiceConfig service : performanceProperties.getServices()) {
+            long startTime = System.currentTimeMillis();
+            boolean up = false;
+            try {
+                var response = restTemplate.getForEntity(service.getUrl(), String.class);
+                up = response.getStatusCode().is2xxSuccessful();
+            } catch (Exception e) {
+                log.warn("Service {} is not reachable: {}", service.getName(), e.getMessage());
+            }
+            long responseTime = System.currentTimeMillis() - startTime;
+            metrics.add(new ServiceHealthMetric(service.getName(), up, responseTime));
+        }
+        return metrics;
+    }
+
+    private double calculateUptime(List<ServiceHealthMetric> metrics) {
+        if (metrics.isEmpty()) return 0.0;
+        long upCount = metrics.stream().filter(ServiceHealthMetric::isUp).count();
+        return (double) upCount / metrics.size() * 100;
+    }
+
+    private double calculateAverageResponseTime(List<ServiceHealthMetric> metrics) {
+        return metrics.stream()
+                .filter(ServiceHealthMetric::isUp)
+                .mapToLong(ServiceHealthMetric::getResponseTime)
+                .average()
+                .orElse(0);
+    }
+
+    private Map<String, Integer> collectErrorsFromAudit(List<AuditEventDTO> events) {
+        Map<String, Integer> errorCounts = new HashMap<>();
+        for (AuditEventDTO event : events) {
+            if ("DANGER".equals(event.getSeverity())) {
+                String key = event.getAction();
+                errorCounts.merge(key, 1, Integer::sum);
+            }
+        }
+        return errorCounts;
+    }
+
+    private static class ServiceHealthMetric {
+        private final String name;
+        private final boolean up;
+        private final long responseTime;
+
+        public ServiceHealthMetric(String name, boolean up, long responseTime) {
+            this.name = name;
+            this.up = up;
+            this.responseTime = responseTime;
+        }
+        public boolean isUp() { return up; }
+        public long getResponseTime() { return responseTime; }
+    }
+
+    // ================== Остальные вспомогательные методы ==================
 
     private int calculateHighRiskAssets(List<AssetDTO> assets) {
         return (int) assets.stream()
@@ -134,18 +228,38 @@ public class ReportService {
                 .count();
     }
 
-    private List<OverviewReportDTO.CategoryCount> buildCategoryDistribution(List<AssetDTO> assets) {
+    private List<OverviewReportDTO.CategoryCount> buildGroupDistribution(List<AssetDTO> assets) {
         Map<String, Long> counts = assets.stream()
-                .collect(Collectors.groupingBy(AssetDTO::getCategory, Collectors.counting()));
+                .collect(Collectors.groupingBy(
+                        a -> a.getGroupName() != null ? a.getGroupName() : "Без группы",
+                        Collectors.counting()
+                ));
         List<OverviewReportDTO.CategoryCount> result = new ArrayList<>();
         counts.forEach((name, count) -> {
             OverviewReportDTO.CategoryCount cc = new OverviewReportDTO.CategoryCount();
-            cc.setName(name != null ? name : "Без категории");
+            cc.setName(name);
             cc.setValue(count.intValue());
-            cc.setColor(getColorForCategory(name));
+            cc.setColor(getColorForGroupName(name));
             result.add(cc);
         });
         return result;
+    }
+
+    private List<AssetsReportDTO.CategoryCount> groupByGroupName(List<AssetDTO> assets) {
+        Map<String, Long> map = assets.stream()
+                .collect(Collectors.groupingBy(
+                        a -> a.getGroupName() != null ? a.getGroupName() : "Без группы",
+                        Collectors.counting()
+                ));
+        List<AssetsReportDTO.CategoryCount> list = new ArrayList<>();
+        map.forEach((name, count) -> {
+            AssetsReportDTO.CategoryCount cc = new AssetsReportDTO.CategoryCount();
+            cc.setName(name);
+            cc.setValue(count.intValue());
+            cc.setColor(getColorForGroupName(name));
+            list.add(cc);
+        });
+        return list;
     }
 
     private List<OverviewReportDTO.CiaAvg> buildCiaDistribution(List<AssetDTO> assets) {
@@ -179,20 +293,6 @@ public class ReportService {
         return cia;
     }
 
-    private List<AssetsReportDTO.CategoryCount> groupByCategory(List<AssetDTO> assets) {
-        Map<String, Long> map = assets.stream()
-                .collect(Collectors.groupingBy(AssetDTO::getCategory, Collectors.counting()));
-        List<AssetsReportDTO.CategoryCount> list = new ArrayList<>();
-        map.forEach((name, count) -> {
-            AssetsReportDTO.CategoryCount cc = new AssetsReportDTO.CategoryCount();
-            cc.setName(name != null ? name : "Без категории");
-            cc.setValue(count.intValue());
-            cc.setColor(getColorForCategory(name));
-            list.add(cc);
-        });
-        return list;
-    }
-
     private List<AssetsReportDTO.StatusCount> groupByStatus(List<AssetDTO> assets) {
         Map<String, Long> map = assets.stream()
                 .collect(Collectors.groupingBy(AssetDTO::getStatus, Collectors.counting()));
@@ -222,30 +322,121 @@ public class ReportService {
     }
 
     private List<AssetsReportDTO.MonthValue> buildGrowthTrend(List<AssetDTO> assets, String period) {
-        // Для демо генерируем последние 7 месяцев
+        if (assets == null || assets.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = calculateStartDate(period, endDate);
+        log.debug("Growth trend period: {} - {}", startDate, endDate);
+
+        Map<YearMonth, Long> groupedByMonth = assets.stream()
+                .filter(asset -> asset.getCreatedAt() != null)
+                .map(asset -> asset.getCreatedAt().toLocalDate())
+                .filter(date -> !date.isBefore(startDate) && !date.isAfter(endDate))
+                .collect(Collectors.groupingBy(YearMonth::from, Collectors.counting()));
+
+        List<YearMonth> sortedMonths = groupedByMonth.keySet().stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM", new Locale("ru"));
         List<AssetsReportDTO.MonthValue> trend = new ArrayList<>();
-        LocalDate now = LocalDate.now();
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM", new Locale("ru"));
-        for (int i = 6; i >= 0; i--) {
-            LocalDate month = now.minusMonths(i);
-            String monthName = month.format(fmt);
-            int count = (int) (Math.random() * 30 + 100); // заглушка
+        for (YearMonth ym : sortedMonths) {
             AssetsReportDTO.MonthValue mv = new AssetsReportDTO.MonthValue();
-            mv.setMonth(monthName);
-            mv.setValue(count);
+            mv.setMonth(ym.format(monthFormatter));
+            mv.setValue(groupedByMonth.get(ym).intValue());
             trend.add(mv);
         }
+
         return trend;
     }
 
-    private List<UsersReportDTO.RoleActivity> buildRoleActivity(List<UserDTO> users) {
-        // Заглушка
+    // ================== Методы для отчёта Users (на основе аудита) ==================
+
+    private List<UsersReportDTO.RoleActivity> buildRoleActivity(List<AuditEventDTO> events) {
+        if (events == null || events.isEmpty()) {
+            return List.of(
+                    createRoleActivity("Администраторы", 0, 0),
+                    createRoleActivity("Пользователи", 0, 0)
+            );
+        }
+
+        long adminLogins = 0;
+        long adminActions = 0;
+        long userLogins = 0;
+        long userActions = 0;
+
+        for (AuditEventDTO event : events) {
+            boolean isAdmin = "admin".equals(event.getUsername());
+            if ("LOGIN".equals(event.getAction())) {
+                if (isAdmin) adminLogins++;
+                else userLogins++;
+            } else {
+                if (isAdmin) adminActions++;
+                else userActions++;
+            }
+        }
+
         return List.of(
-                createRoleActivity("Администраторы", 245, 1204),
-                createRoleActivity("Пользователи", 1542, 3248),
-                createRoleActivity("Аудиторы", 86, 412)
+                createRoleActivity("Администраторы", (int) adminLogins, (int) adminActions),
+                createRoleActivity("Пользователи", (int) userLogins, (int) userActions)
         );
     }
+
+    private List<UsersReportDTO.DayActivity> buildDailyActivity(List<AuditEventDTO> events) {
+        if (events == null || events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Integer, int[]> dayStats = new HashMap<>();
+        for (int i = 1; i <= 7; i++) {
+            dayStats.put(i, new int[]{0, 0});
+        }
+
+        for (AuditEventDTO event : events) {
+            if (event.getTimestamp() == null) continue;
+            LocalDate date = LocalDate.parse(event.getTimestamp().split("T")[0]);
+            int dayOfWeek = date.getDayOfWeek().getValue();
+            int[] stats = dayStats.get(dayOfWeek);
+            if ("LOGIN".equals(event.getAction())) {
+                stats[0]++;
+            } else {
+                stats[1]++;
+            }
+        }
+
+        Map<Integer, String> dayNames = Map.of(
+                1, "Пн", 2, "Вт", 3, "Ср", 4, "Чт", 5, "Пт", 6, "Сб", 7, "Вс"
+        );
+        List<UsersReportDTO.DayActivity> result = new ArrayList<>();
+        for (int i = 1; i <= 7; i++) {
+            int[] stats = dayStats.get(i);
+            result.add(createDayActivity(dayNames.get(i), stats[0], stats[1]));
+        }
+        return result;
+    }
+
+    private List<UsersReportDTO.UserActivity> buildTopUsers(List<AuditEventDTO> events) {
+        if (events == null || events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Integer> userActions = new HashMap<>();
+        for (AuditEventDTO event : events) {
+            String username = event.getUsername();
+            if (username == null) continue;
+            userActions.merge(username, 1, Integer::sum);
+        }
+
+        return userActions.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(5)
+                .map(entry -> createUserActivity(entry.getKey(), entry.getValue(), null))
+                .collect(Collectors.toList());
+    }
+
+    // ================== Вспомогательные методы для создания DTO ==================
 
     private UsersReportDTO.RoleActivity createRoleActivity(String name, int logins, int actions) {
         UsersReportDTO.RoleActivity ra = new UsersReportDTO.RoleActivity();
@@ -253,18 +444,6 @@ public class ReportService {
         ra.setLogins(logins);
         ra.setActions(actions);
         return ra;
-    }
-
-    private List<UsersReportDTO.DayActivity> buildDailyActivity() {
-        return List.of(
-                createDayActivity("Пн", 145, 324),
-                createDayActivity("Вт", 162, 368),
-                createDayActivity("Ср", 178, 412),
-                createDayActivity("Чт", 154, 356),
-                createDayActivity("Пт", 132, 298),
-                createDayActivity("Сб", 48, 86),
-                createDayActivity("Вс", 32, 54)
-        );
     }
 
     private UsersReportDTO.DayActivity createDayActivity(String day, int logins, int actions) {
@@ -275,33 +454,22 @@ public class ReportService {
         return da;
     }
 
-    private List<UsersReportDTO.UserActivity> buildTopUsers(List<UserDTO> users) {
-        // Заглушка
-        return List.of(
-                createUserActivity("Иванов И.И.", 324, "Сегодня"),
-                createUserActivity("Петрова А.С.", 298, "Вчера"),
-                createUserActivity("Сидоров В.П.", 256, "2 дня назад"),
-                createUserActivity("Кузнецов Д.А.", 198, "Сегодня"),
-                createUserActivity("Смирнова О.И.", 176, "3 дня назад")
-        );
-    }
-
     private UsersReportDTO.UserActivity createUserActivity(String name, int actions, String lastLogin) {
         UsersReportDTO.UserActivity ua = new UsersReportDTO.UserActivity();
         ua.setName(name);
         ua.setActions(actions);
-        ua.setLastLogin(lastLogin);
+        ua.setLastLogin(lastLogin != null ? lastLogin : "");
         return ua;
     }
 
+    // ================== Методы для отчёта Security ==================
+
     private List<SecurityReportDTO.RiskCount> buildRiskDistribution(List<AuditEventDTO> events) {
-        // Группируем по severity
         Map<String, Long> counts = events.stream()
                 .collect(Collectors.groupingBy(AuditEventDTO::getSeverity, Collectors.counting()));
 
         List<SecurityReportDTO.RiskCount> list = new ArrayList<>();
 
-        // Задаём соответствие severity -> название и цвет
         Map<String, String[]> severityMapping = Map.of(
                 "DANGER", new String[]{"Высокий риск", "#ef4444"},
                 "WARNING", new String[]{"Средний риск", "#f59e0b"},
@@ -321,28 +489,6 @@ public class ReportService {
         return list;
     }
 
-    private String mapSeverityToName(String severity) {
-        if (severity == null) return "Информационный";
-        return switch (severity) {
-            case "DANGER" -> "Высокий риск";
-            case "WARNING" -> "Средний риск";
-            case "INFO" -> "Низкий риск";
-            case "SUCCESS" -> "Успех";
-            default -> "Информационный";
-        };
-    }
-
-    private String mapSeverityToColor(String severity) {
-        if (severity == null) return "#3b82f6";
-        return switch (severity) {
-            case "DANGER" -> "#ef4444";
-            case "WARNING" -> "#f59e0b";
-            case "INFO" -> "#10b981";
-            case "SUCCESS" -> "#22c55e";
-            default -> "#3b82f6";
-        };
-    }
-
     private SecurityReportDTO.RiskCount createRiskCount(String name, int value, String color) {
         SecurityReportDTO.RiskCount rc = new SecurityReportDTO.RiskCount();
         rc.setName(name);
@@ -352,11 +498,26 @@ public class ReportService {
     }
 
     private List<SecurityReportDTO.DateCount> buildAuditEventsTimeline(List<AuditEventDTO> events) {
-        // Заглушка, так как нет временных меток
-        return List.of(
-                createDateCount("01.01", 0),
-                createDateCount("08.01", 0)
-        );
+        if (events == null || events.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Long> groupedByDate = events.stream()
+                .filter(e -> e.getTimestamp() != null && !e.getTimestamp().isEmpty())
+                .collect(Collectors.groupingBy(
+                        e -> e.getTimestamp().split("T")[0],
+                        Collectors.counting()
+                ));
+
+        return groupedByDate.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    SecurityReportDTO.DateCount dc = new SecurityReportDTO.DateCount();
+                    dc.setDate(entry.getKey());
+                    dc.setValue(entry.getValue().intValue());
+                    return dc;
+                })
+                .collect(Collectors.toList());
     }
 
     private SecurityReportDTO.DateCount createDateCount(String date, int value) {
@@ -367,28 +528,20 @@ public class ReportService {
     }
 
     private Map<String, Integer> buildComplianceStatus() {
-        return Map.of(
-                "iso27001", 85,
-                "gdpr", 92,
-                "sox", 78,
-                "pciDss", 65
-        );
+        return Collections.emptyMap(); // больше не мок, возвращаем пустую мапу
     }
 
-    private PerformanceReportDTO.HourValue createHourValue(String hour, int value) {
-        PerformanceReportDTO.HourValue hv = new PerformanceReportDTO.HourValue();
-        hv.setHour(hour);
-        hv.setValue(value);
-        return hv;
-    }
+    // ================== Цветовые схемы ==================
 
-    private String getColorForCategory(String category) {
-        if (category == null) return "#8884d8";
-        return switch (category.toLowerCase()) {
-            case "database" -> "#8884d8";
-            case "documentation" -> "#82ca9d";
-            case "software" -> "#ffc658";
-            default -> "#3b82f6";
+    private String getColorForGroupName(String groupName) {
+        if (groupName == null) return "#8884d8";
+        return switch (groupName) {
+            case "Аппаратные активы" -> "#8884d8";
+            case "Программные активы" -> "#82ca9d";
+            case "Информационные активы" -> "#ffc658";
+            case "Сервисы" -> "#3b82f6";
+            case "Без группы" -> "#94a3b8";
+            default -> "#8884d8";
         };
     }
 
