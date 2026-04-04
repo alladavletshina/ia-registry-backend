@@ -72,7 +72,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Получить информацию о текущем пользователе")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь найден",
@@ -90,7 +90,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Обновить данные пользователя (админ)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пользователь обновлён",
@@ -108,6 +108,15 @@ public class UserController {
                                                       ) {
         String clientIp = IpUtils.getClientIp(httpRequest);
         UserResponseDto updated = userService.updateUser(id, request,clientIp, jwt);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasAnyRole('user')")
+    @Operation(summary = "Обновить данные пользователя (пользователь)")
+    public ResponseEntity<UserResponseDto> updateCurrentUser(@RequestBody UserRequestDto request,
+                                                             @AuthenticationPrincipal Jwt jwt) {
+        UserResponseDto updated = userService.updateMe(request, jwt);
         return ResponseEntity.ok(updated);
     }
 }

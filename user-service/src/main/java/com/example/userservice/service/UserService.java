@@ -250,4 +250,20 @@ public class UserService {
         return value;
     }
 
+    public UserResponseDto updateMe(UserRequestDto request, Jwt jwt) {
+
+        String keycloakId = jwt.getSubject();
+
+        UserEntity user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhone(request.getPhone());
+        user.setPosition(request.getPosition());
+        user.setDepartment(request.getDepartment());
+
+        userRepository.save(user);
+        return mapToDto(user);
+    }
 }
