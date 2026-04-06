@@ -3,17 +3,24 @@ package com.example.userservice.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +28,13 @@ import java.util.Collections;
 public class KeycloakAdminClient {
 
     private final Keycloak keycloak;
+    private final RestTemplate restTemplate;
 
     @Value("${keycloak.target-realm}")
     private String targetRealm;
+
+    @Value("${keycloak.auth-server-url}")
+    private String serverUrl;
 
     public String createUser(String email, String password, String firstName, String lastName){
         try {
@@ -169,6 +180,30 @@ public class KeycloakAdminClient {
         } catch (Exception e) {
             log.error("Ошибка назначения роли '{}' пользователю {}: {}", roleName, userId, e.getMessage(), e);
             throw new RuntimeException("Не удалось назначить роль пользователю");
+        }
+    }
+
+    /**
+     * Проверка пароля пользователя через Keycloak.
+     */
+    public boolean verifyPassword(String username, String password) {
+        try {
+            String tokenUrl = serverUrl + "/realms/" + targetRealm + "/protocol/openid-connect/token";
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("client_id", "frontend-app");        // ваш client-id
+            params.add("username", username);
+            params.add("password", password);
+            params.add("grant_type", "password");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(tokenUrl, HttpMethod.POST, entity, Map.class);
+            return response.getStatusCode() == HttpStatus.OK;
+        } catch (Exception e) {
+            log.warn("Password verification failed for user {}: {}", username, e.getMessage());
+            return false;
         }
     }
 }

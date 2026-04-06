@@ -266,4 +266,38 @@ public class UserService {
         userRepository.save(user);
         return mapToDto(user);
     }
+
+    /**
+     * Смена пароля текущим пользователем (требуется старый пароль)
+     */
+    public void changePassword(String oldPassword, String newPassword, Jwt jwt) {
+        String keycloakId = jwt.getSubject();
+        UserEntity user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        // Проверяем старый пароль через Keycloak
+        boolean valid = keycloakClient.verifyPassword(user.getEmail(), oldPassword);
+        if (!valid) {
+            throw new RuntimeException("Неверный текущий пароль");
+        }
+
+        if (oldPassword.equals(newPassword)) {
+            throw new RuntimeException("Новый пароль не должен совпадать со старым");
+        }
+
+        // Устанавливаем новый пароль
+        keycloakClient.setUserPassword(keycloakId, newPassword);
+
+        // Отправляем событие аудита (опционально)
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(UUID.fromString(keycloakId));
+        event.setUsername(user.getEmail());
+        event.setAction("PASSWORD_CHANGE");
+        event.setDetails("Пользователь сменил пароль");
+        event.setSeverity("INFO");
+        event.setServiceName("user-service");
+        event.setObjectId(user.getId().toString());
+        event.setObjectType("User");
+        auditEventPublisher.publishEvent(event);
+    }
 }

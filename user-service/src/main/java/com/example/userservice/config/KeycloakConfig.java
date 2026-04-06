@@ -6,6 +6,7 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class KeycloakConfig {
@@ -24,6 +25,11 @@ public class KeycloakConfig {
 
     @Value("${keycloak.admin.client-id:admin-cli}")
     private String clientId;
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
     @Bean
     public Keycloak keycloak() {

@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.request.ChangePasswordRequest;
 import com.example.userservice.dto.request.UserRequestDto;
 import com.example.userservice.dto.response.UserResponseDto;
 import com.example.userservice.service.UserService;
@@ -119,4 +120,14 @@ public class UserController {
         UserResponseDto updated = userService.updateMe(request, jwt);
         return ResponseEntity.ok(updated);
     }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
+    @Operation(summary = "Смена пароля текущего пользователя")
+    public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request,
+                                               @AuthenticationPrincipal Jwt jwt) {
+        userService.changePassword(request.getOldPassword(), request.getNewPassword(), jwt);
+        return ResponseEntity.ok().build();
+    }
+
 }
