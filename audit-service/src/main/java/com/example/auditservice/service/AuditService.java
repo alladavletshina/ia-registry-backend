@@ -11,8 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -58,7 +60,7 @@ public class AuditService {
                 .and(hasUserId(userId))
                 .and(hasAction(action))
                 .and(hasSeverity(sev))
-                .and(usernameContains(search)); // если нужно искать по username
+                .and(globalSearch(search));
 
         Page<AuditLog> page = repository.findAll(spec, pageable);
         return page.map(AuditLogDto::fromEntity);
@@ -143,5 +145,21 @@ public class AuditService {
         dto.setObjectId(log.getObjectId());
         dto.setObjectType(log.getObjectType());
         return dto;
+    }
+
+    @Transactional
+    public void deleteAuditLog(UUID id) {
+        if (!repository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Запись аудита не найдена");
+        }
+        repository.deleteById(id);
+        log.info("Удалена запись аудита id={}", id);
+    }
+
+    @Transactional
+    public void deleteAllAuditLogs() {
+        long count = repository.count();
+        repository.deleteAll();
+        log.warn("Удалено {} записей аудита", count);
     }
 }

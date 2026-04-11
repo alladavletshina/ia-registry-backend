@@ -71,7 +71,7 @@ public class AssetService {
         event.setAction("CREATE_ASSET");
         event.setDetails(String.format("Создан актив: %s (id=%d)", saved.getName(), saved.getId()));
         event.setIp(clientIp);
-        event.setSeverity("INFO");
+        event.setSeverity("SUCCESS");
         event.setServiceName("asset-service");
         event.setObjectId(String.valueOf(saved.getId()));
         event.setObjectType("Asset");
@@ -175,7 +175,7 @@ public class AssetService {
         event.setAction("UPDATE_ASSET");
         event.setDetails(String.format("Изменен актив: %s (id=%d)", saved.getName(), saved.getId()));
         event.setIp(clientIp);
-        event.setSeverity("INFO");
+        event.setSeverity("WARNING");
         event.setServiceName("asset-service");
         event.setObjectId(String.valueOf(saved.getId()));
         event.setObjectType("Asset");
@@ -199,7 +199,7 @@ public class AssetService {
         event.setAction("DELETE_ASSET");
         event.setDetails(String.format("Удален актив: %s (id=%d)", asset.getName(), asset.getId()));
         event.setIp(clientIp);
-        event.setSeverity("WARNING");
+        event.setSeverity("DANGER");
         event.setServiceName("asset-service");
         event.setObjectId(String.valueOf(asset.getId()));
         event.setObjectType("Asset");

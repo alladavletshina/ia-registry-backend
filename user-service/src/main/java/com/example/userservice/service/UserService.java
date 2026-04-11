@@ -320,7 +320,7 @@ public class UserService {
         event.setUsername(user.getEmail());
         event.setAction("PASSWORD_CHANGE");
         event.setDetails("Пользователь сменил пароль");
-        event.setSeverity("INFO");
+        event.setSeverity("WARNING");
         event.setServiceName("user-service");
         event.setObjectId(user.getId().toString());
         event.setIp(clientIp);

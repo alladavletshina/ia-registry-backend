@@ -30,9 +30,18 @@ public class AuditLogSpecifications {
         return (root, query, cb) -> severity == null ? null : cb.equal(root.get("severity"), severity);
     }
 
-    // Если нужен поиск по username (текстовый)
-    public static Specification<AuditLog> usernameContains(String search) {
-        return (root, query, cb) -> !StringUtils.hasText(search) ? null :
-                cb.like(cb.lower(root.get("username")), "%" + search.toLowerCase() + "%");
+    public static Specification<AuditLog> globalSearch(String search) {
+        if (!StringUtils.hasText(search)) {
+            return null;
+        }
+        String pattern = "%" + search.toLowerCase() + "%";
+        return (root, query, cb) -> cb.or(
+                cb.like(cb.lower(root.get("username")), pattern),
+                cb.like(cb.lower(root.get("action")), pattern),
+                cb.like(cb.lower(root.get("details")), pattern),
+                cb.like(cb.lower(root.get("objectId")), pattern),
+                cb.like(cb.lower(root.get("objectType")), pattern),
+                cb.like(cb.lower(root.get("ip")), pattern)
+        );
     }
 }
