@@ -82,3 +82,15 @@ springdoc:
     default-models-expand-depth: 3
     try-it-out-enabled: true
     filter: true
+
+services:
+  user-service:
+    url: http://user-service:8080/api/users
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic

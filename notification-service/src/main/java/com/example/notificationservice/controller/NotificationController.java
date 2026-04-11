@@ -29,14 +29,12 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    @Operation(summary = "Получить уведомления текущего пользователя (с пагинацией)")
     public ResponseEntity<Page<NotificationDto>> getMyNotifications(
             @RequestParam(required = false) boolean unreadOnly,
             @PageableDefault(size = 20) Pageable pageable,
             @AuthenticationPrincipal Jwt jwt
     ) {
-        UUID keyclockId = notificationService.extractKeyclockId(jwt);
-        Page<NotificationDto> page = notificationService.getUserNotifications(keyclockId, unreadOnly, pageable);
+        Page<NotificationDto> page = notificationService.getUserNotifications(jwt, unreadOnly, pageable);
         return ResponseEntity.ok(page);
     }
 
@@ -61,20 +59,15 @@ public class NotificationController {
 
     @PatchMapping("/read-all")
     @Operation(summary = "Отметить все уведомления как прочитанные")
-    public ResponseEntity<Void> markAllAsRead(
-            @AuthenticationPrincipal Jwt jwt
-    ){
-
-        UUID keyclock = notificationService.extractKeyclockId(jwt);
-        notificationService.markAllAsRead(keyclock);
+    public ResponseEntity<Void> markAllAsRead(@AuthenticationPrincipal Jwt jwt) {
+        notificationService.markAllAsRead(jwt);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/unread-count")
     @Operation(summary = "Количество непрочитанных уведомлений")
     public ResponseEntity<UnreadCountDto> getUnreadCount(@AuthenticationPrincipal Jwt jwt) {
-        UUID keyclockId = notificationService.extractKeyclockId(jwt);
-        long count = notificationService.countUnread(keyclockId);
+        long count = notificationService.countUnread(jwt);
         return ResponseEntity.ok(new UnreadCountDto(count));
     }
 
@@ -111,5 +104,14 @@ public class NotificationController {
 
         NotificationDto notification = notificationService.createNotification(dto);
         return ResponseEntity.ok(notification);
+    }
+
+    @GetMapping("/admin/all")
+    @Operation(summary = "Получить все непрочитанные уведомления")
+    public ResponseEntity<Page<NotificationDto>> getAllNotifications(
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<NotificationDto> page = notificationService.getAllNotifications(true, pageable);
+        return ResponseEntity.ok(page);
     }
 }

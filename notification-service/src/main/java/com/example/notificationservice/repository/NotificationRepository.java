@@ -20,4 +20,6 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     void markAllAsRead(@Param("userId") UUID userId);
 
     long countByKeyclockIdAndReadFalse(UUID keyclockId);
+
+    Page<Notification> findAllByReadFalse(org.springframework.data.domain.Pageable pageable);
 }

@@ -45,10 +45,11 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/notifications/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/notifications/**").hasRole("admin")
-                        .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").hasRole("admin")
-                        .requestMatchers(HttpMethod.PUT, "/api/notifications/**").hasRole("admin")
-                        .requestMatchers("/api/notifications/admin/**").hasRole("admin")
+                        .requestMatchers(HttpMethod.POST, "/api/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/notifications/**").permitAll()
+                        .requestMatchers("/api/notifications/admin/**").permitAll()
 
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()

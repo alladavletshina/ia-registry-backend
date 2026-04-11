@@ -132,4 +132,11 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/by-keycloak-id")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
+    public ResponseEntity<UserResponseDto> getUserByKeycloakId(@RequestParam String keycloakId) {
+        UserResponseDto user = userService.getUserByKeycloakId(keycloakId);
+        return ResponseEntity.ok(user);
+    }
+
 }
