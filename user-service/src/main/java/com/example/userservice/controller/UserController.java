@@ -125,8 +125,10 @@ public class UserController {
     @PreAuthorize("hasAnyRole('admin', 'user')")
     @Operation(summary = "Смена пароля текущего пользователя")
     public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request,
-                                               @AuthenticationPrincipal Jwt jwt) {
-        userService.changePassword(request.getOldPassword(), request.getNewPassword(), jwt);
+                                               @AuthenticationPrincipal Jwt jwt,
+                                               HttpServletRequest httpRequest) {
+        String clientIp = IpUtils.getClientIp(httpRequest);
+        userService.changePassword(request.getOldPassword(), request.getNewPassword(), jwt, clientIp);
         return ResponseEntity.ok().build();
     }
 

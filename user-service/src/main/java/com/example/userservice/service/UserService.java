@@ -13,8 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -268,9 +270,30 @@ public class UserService {
     }
 
     /**
+     * Валидация сложности пароля (дублирует аннотации из DTO для надёжности)
+     */
+    private void validatePasswordStrength(String password) {
+        if (password == null || password.length() < 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пароль должен содержать минимум 8 символов");
+        }
+        if (!password.matches(".*[0-9].*")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пароль должен содержать хотя бы одну цифру");
+        }
+        if (!password.matches(".*[a-z].*")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пароль должен содержать хотя бы одну строчную букву");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пароль должен содержать хотя бы одну заглавную букву");
+        }
+        if (!password.matches(".*[@#$%^&+=!].*")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Пароль должен содержать хотя бы один спецсимвол (@ # $ % ^ & + = !)");
+        }
+    }
+
+    /**
      * Смена пароля текущим пользователем (требуется старый пароль)
      */
-    public void changePassword(String oldPassword, String newPassword, Jwt jwt) {
+    public void changePassword(String oldPassword, String newPassword, Jwt jwt, String clientIp) {
         String keycloakId = jwt.getSubject();
         UserEntity user = userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
@@ -278,12 +301,15 @@ public class UserService {
         // Проверяем старый пароль через Keycloak
         boolean valid = keycloakClient.verifyPassword(user.getEmail(), oldPassword);
         if (!valid) {
-            throw new RuntimeException("Неверный текущий пароль");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неверный текущий пароль");
         }
 
         if (oldPassword.equals(newPassword)) {
-            throw new RuntimeException("Новый пароль не должен совпадать со старым");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Новый пароль не должен совпадать со старым");
         }
+
+        // Валидация сложности нового пароля
+        validatePasswordStrength(newPassword);
 
         // Устанавливаем новый пароль
         keycloakClient.setUserPassword(keycloakId, newPassword);
@@ -297,6 +323,7 @@ public class UserService {
         event.setSeverity("INFO");
         event.setServiceName("user-service");
         event.setObjectId(user.getId().toString());
+        event.setIp(clientIp);
         event.setObjectType("User");
         auditEventPublisher.publishEvent(event);
     }

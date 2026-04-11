@@ -9,8 +9,8 @@ import lombok.Data;
 public class ChangePasswordRequest {
     private String oldPassword;
     @NotBlank
-    @Size(min = 6, max = 100, message = "Пароль должен быть от 6 до 100 символов")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
-            message = "Пароль должен содержать цифру, заглавную и строчную буквы, спецсимвол")
+    @Size(min = 8, max = 100, message = "Пароль должен быть от 8 до 100 символов")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$",
+            message = "Пароль должен содержать цифру, заглавную и строчную буквы, спецсимвол (@ # $ % ^ & + = !)")
     private String newPassword;
 }
