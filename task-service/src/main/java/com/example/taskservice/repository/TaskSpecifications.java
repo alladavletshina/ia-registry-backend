@@ -44,15 +44,20 @@ public class TaskSpecifications {
 
     public static Specification<Task> search(String searchTerm) {
         return (root, query, cb) -> {
-            if (searchTerm == null || searchTerm.trim().isEmpty()) return cb.conjunction();
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return cb.conjunction();
+            }
 
             String pattern = "%" + searchTerm.toLowerCase() + "%";
-            // Поиск по title, description и tags (через join)
-            Join<Object, Object> tagsJoin = root.joinList("tags", JoinType.LEFT);
+
+            Join<Task, String> tagsJoin = root.join("tags", JoinType.LEFT);
+
+            query.distinct(true);
+
             return cb.or(
                     cb.like(cb.lower(root.get("title")), pattern),
                     cb.like(cb.lower(root.get("description")), pattern),
-                    cb.like(cb.lower(tagsJoin.get("tag")), pattern)
+                    cb.like(cb.lower(tagsJoin), pattern)   // ← убрали .get("tag")
             );
         };
     }
