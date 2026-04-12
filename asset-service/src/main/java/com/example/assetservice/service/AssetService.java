@@ -86,10 +86,18 @@ public class AssetService {
     }
 
     @Transactional(readOnly = true)
-    public List<AssetResponse> getAllAssets() {
-        return assetRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public List<AssetResponse> getAllAssets(String status, String search) {
+        List<Asset> assets;
+        if (status != null && search != null) {
+            assets = assetRepository.findByStatusAndNameContainingIgnoreCase(AssetStatus.valueOf(status), search);
+        } else if (status != null) {
+            assets = assetRepository.findByStatus(AssetStatus.valueOf(status));
+        } else if (search != null) {
+            assets = assetRepository.findByNameContainingIgnoreCase(search);
+        } else {
+            assets = assetRepository.findAll();
+        }
+        return assets.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     private AssetResponse mapToResponse(Asset asset) {

@@ -67,9 +67,11 @@ public class AssetController {
                     content = @Content(schema = @Schema(implementation = AssetResponse.class))),
             @ApiResponse(responseCode = "401", description = "Неавторизован")
     })
-    public ResponseEntity<List<AssetResponse>> getAllAssets(){
-
-        List<AssetResponse> assets = assetService.getAllAssets();
+    public ResponseEntity<List<AssetResponse>> getAllAssets(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search
+    ) {
+        List<AssetResponse> assets = assetService.getAllAssets(status, search);
         return ResponseEntity.ok(assets);
     }
 
