@@ -275,7 +275,7 @@ public class TaskService {
         return mapToDto(task);
     }
 
-    public Page<TaskDto> findTasks(TaskStatus status, TaskPriority priority, TaskType type,
+    public Page<TaskDto> findTasks(String statusFilter, TaskPriority priority, TaskType type,
                                    String search, Long assetId, UUID assignedTo, LocalDate dueDateFrom,
                                    LocalDate dueDateTo, Pageable pageable, Jwt jwt, UUID userId) {
 
@@ -284,9 +284,22 @@ public class TaskService {
             assignedTo = userId;
         }
 
-        Specification<Task> spec = Specification
-                .where(TaskSpecifications.byStatus(status))
-                .and(TaskSpecifications.byPriority(priority))
+        Specification<Task> spec = Specification.where(null);
+
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            if ("OVERDUE".equalsIgnoreCase(statusFilter)) {
+                spec = spec.and(TaskSpecifications.overdue());
+            } else {
+                try {
+                    TaskStatus status = TaskStatus.valueOf(statusFilter.toUpperCase());
+                    spec = spec.and(TaskSpecifications.byStatus(status));
+                } catch (IllegalArgumentException e) {
+                    // неверный статус — игнорируем
+                }
+            }
+        }
+
+        spec = spec.and(TaskSpecifications.byPriority(priority))
                 .and(TaskSpecifications.byType(type))
                 .and(TaskSpecifications.byAssetId(assetId))
                 .and(TaskSpecifications.byAssignedTo(assignedTo))

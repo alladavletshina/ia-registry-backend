@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -32,4 +33,8 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
 
     // Для обычного пользователя: количество его задач
     long countByAssignedTo(UUID assignedTo);
+
+    // Новый метод: просроченные задачи
+    @Query("SELECT t FROM Task t WHERE t.dueDate < CURRENT_DATE AND t.status != 'COMPLETED'")
+    List<Task> findOverdueTasks();
 }

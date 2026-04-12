@@ -6,6 +6,7 @@ import com.example.taskservice.model.TaskStatus;
 import com.example.taskservice.model.TaskType;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -53,6 +54,15 @@ public class TaskSpecifications {
                     cb.like(cb.lower(root.get("description")), pattern),
                     cb.like(cb.lower(tagsJoin.get("tag")), pattern)
             );
+        };
+    }
+
+    public static Specification<Task> overdue() {
+        return (root, query, cb) -> {
+            LocalDate today = LocalDate.now();
+            Predicate dueDateBefore = cb.lessThan(root.get("dueDate"), today);
+            Predicate notCompleted = cb.notEqual(root.get("status"), TaskStatus.COMPLETED);
+            return cb.and(dueDateBefore, notCompleted);
         };
     }
 }

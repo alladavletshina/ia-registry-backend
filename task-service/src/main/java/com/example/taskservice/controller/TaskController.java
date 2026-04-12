@@ -161,7 +161,8 @@ public class TaskController {
     })
     @GetMapping
     public ResponseEntity<Page<TaskDto>> getTasks(
-            @Parameter(description = "Статус задачи") @RequestParam(required = false) TaskStatus status,
+            @Parameter(description = "Статус задачи (можно указать OVERDUE для просроченных)")
+            @RequestParam(required = false) String status,
             @Parameter(description = "Приоритет") @RequestParam(required = false) TaskPriority priority,
             @Parameter(description = "Тип задачи") @RequestParam(required = false) TaskType type,
             @Parameter(description = "Поиск по названию, описанию, тегам") @RequestParam(required = false) String search,
@@ -172,11 +173,11 @@ public class TaskController {
             @PageableDefault(size = 20, sort = "dueDate", direction = Sort.Direction.ASC) Pageable pageable,
             @Parameter(description = "ИД клиента") @RequestParam(required = false) UUID userId,
             @AuthenticationPrincipal Jwt jwt
-            ) {
-                Page<TaskDto> tasks = taskService.findTasks(status, priority, type,
-                        search, assetId, assignedTo, dueDateFrom,
-                        dueDateTo, pageable, jwt, userId);
-                return ResponseEntity.ok(tasks);
+    ) {
+        Page<TaskDto> tasks = taskService.findTasks(status, priority, type,
+                search, assetId, assignedTo, dueDateFrom,
+                dueDateTo, pageable, jwt, userId);
+        return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/stats/by-user")
