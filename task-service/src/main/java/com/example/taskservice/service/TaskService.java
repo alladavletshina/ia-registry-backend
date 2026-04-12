@@ -394,4 +394,13 @@ public class TaskService {
 
         return mapToDto(task);
     }
+
+    public TaskStatsDto getStatsByInternalUserId(UUID internalUserId) {
+        long total = taskRepository.countByAssignedTo(internalUserId);
+        long pending = taskRepository.countByStatusAndAssignedTo(TaskStatus.PENDING, internalUserId);
+        long inProgress = taskRepository.countByStatusAndAssignedTo(TaskStatus.IN_PROGRESS, internalUserId);
+        long completed = taskRepository.countByStatusAndAssignedTo(TaskStatus.COMPLETED, internalUserId);
+        long overdue = taskRepository.countOverdueForUser(internalUserId, LocalDate.now());
+        return new TaskStatsDto(total, pending, inProgress, completed, overdue);
+    }
 }

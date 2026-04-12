@@ -178,4 +178,14 @@ public class TaskController {
                         dueDateTo, pageable, jwt, userId);
                 return ResponseEntity.ok(tasks);
     }
+
+    @GetMapping("/stats/by-user")
+    @PreAuthorize("hasRole('user')")
+    @Operation(summary = "Получить статистику задач для конкретного пользователя (по внутреннему ID)")
+    public ResponseEntity<TaskStatsDto> getStatsByUser(
+            @RequestParam UUID userId
+    ) {
+        TaskStatsDto stats = taskService.getStatsByInternalUserId(userId);
+        return ResponseEntity.ok(stats);
+    }
 }
