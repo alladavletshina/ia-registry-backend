@@ -11,6 +11,8 @@ import com.example.assetservice.repository.AssetRepository;
 import com.example.assetservice.repository.RiskRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -228,5 +230,11 @@ public class AssetService {
         List<Risk> risks = riskRepository.findByAssetOrderByCalculationDateDesc(asset);
 
         return risks;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AssetResponse> searchAssetsByName(String query, Pageable pageable) {
+        Page<Asset> assets = assetRepository.findByNameContainingIgnoreCase(query, pageable);
+        return assets.map(this::mapToResponse);
     }
 }
