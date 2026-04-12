@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/assets/**").hasAnyRole("admin", "user")
+                        .requestMatchers(HttpMethod.PATCH, "/api/assets/**").hasAnyRole("admin", "user")
                         .requestMatchers(HttpMethod.POST, "/api/assets/**").hasAnyRole("admin", "user")
                         .requestMatchers(HttpMethod.DELETE, "/api/assets/**").hasAnyRole("admin", "user")
                         .requestMatchers(HttpMethod.PUT, "/api/assets/**").hasAnyRole("admin", "user")

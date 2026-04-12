@@ -4,6 +4,7 @@ import com.example.assetservice.dto.AssetResponse;
 import com.example.assetservice.dto.AuditEventDto;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.dto.CreateAssetRequest;
+import com.example.assetservice.model.AssetStatus;
 import com.example.assetservice.model.entity.AssetGroup;
 import com.example.assetservice.model.entity.Risk;
 import com.example.assetservice.repository.AssetGroupRepository;
@@ -19,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -236,5 +239,57 @@ public class AssetService {
     public Page<AssetResponse> searchAssetsByName(String query, Pageable pageable) {
         Page<Asset> assets = assetRepository.findByNameContainingIgnoreCase(query, pageable);
         return assets.map(this::mapToResponse);
+    }
+
+    @Transactional
+    public AssetResponse patchAsset(long id, Map<String, Object> updates, Jwt jwt, String clientIp) {
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Актив не найден"));
+
+        if (updates.containsKey("status")) {
+            String statusStr = (String) updates.get("status");
+            AssetStatus newStatus = AssetStatus.valueOf(statusStr);
+            asset.setStatus(newStatus);
+        }
+        if (updates.containsKey("name")) {
+            asset.setName((String) updates.get("name"));
+        }
+        if (updates.containsKey("description")) {
+            asset.setDescription((String) updates.get("description"));
+        }
+        if (updates.containsKey("ownerId")) {
+            asset.setOwnerId((String) updates.get("ownerId"));
+        }
+        if (updates.containsKey("value")) {
+            asset.setValue(new BigDecimal(updates.get("value").toString()));
+        }
+        if (updates.containsKey("groupId")) {
+            String groupIdStr = (String) updates.get("groupId");
+            if (groupIdStr != null && !groupIdStr.isEmpty()) {
+                AssetGroup group = assetGroupRepository.findById(UUID.fromString(groupIdStr))
+                        .orElseThrow(() -> new RuntimeException("Группа не найдена"));
+                asset.setGroup(group);
+            } else {
+                asset.setGroup(null);
+            }
+        }
+
+        asset.setUpdatedAt(LocalDateTime.now());
+        Asset saved = assetRepository.save(asset);
+
+        // Отправляем аудит
+        AuditEventDto event = new AuditEventDto();
+        event.setUserId(UUID.fromString(jwt.getSubject()));
+        event.setUsername(jwt.getClaim("preferred_username"));
+        event.setAction("UPDATE_ASSET");
+        event.setDetails(String.format("Частично обновлен актив: %s (id=%d)", saved.getName(), saved.getId()));
+        event.setIp(clientIp);
+        event.setSeverity("WARNING");
+        event.setServiceName("asset-service");
+        event.setObjectId(String.valueOf(saved.getId()));
+        event.setObjectType("Asset");
+        auditEventPublisher.publishEvent(event);
+
+        return mapToResponse(saved);
     }
 }

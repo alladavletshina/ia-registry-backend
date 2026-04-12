@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -166,5 +167,19 @@ public class AssetController {
     ) {
         Page<AssetResponse> assets = assetService.searchAssetsByName(query, pageable);
         return ResponseEntity.ok(assets);
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('admin', 'user')")
+    @Operation(summary = "Частично обновить актив (например, статус)")
+    public ResponseEntity<AssetResponse> patchAsset(
+            @PathVariable long id,
+            @RequestBody Map<String, Object> updates,
+            @AuthenticationPrincipal Jwt jwt,
+            HttpServletRequest httpRequest
+    ) {
+        String clientIp = IpUtils.getClientIp(httpRequest);
+        AssetResponse updated = assetService.patchAsset(id, updates, jwt, clientIp);
+        return ResponseEntity.ok(updated);
     }
 }
