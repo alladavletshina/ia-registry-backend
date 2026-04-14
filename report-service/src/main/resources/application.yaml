@@ -2,6 +2,8 @@ server:
   port: 8089
 
 spring:
+  cache:
+    type: none
   application:
     name: report-service
   environment:
