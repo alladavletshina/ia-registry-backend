@@ -144,6 +144,7 @@ public class AuditService {
         dto.setServiceName(log.getServiceName());
         dto.setObjectId(log.getObjectId());
         dto.setObjectType(log.getObjectType());
+        dto.setTimestamp(log.getTimestamp());
         return dto;
     }
 

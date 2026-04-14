@@ -13,7 +13,7 @@ public interface AuditServiceClient {
     // Для отчёта по безопасности
     @GetMapping("/report")
     List<AuditEventDTO> getReportData(
-            @RequestParam("from") String from,
-            @RequestParam("to") String to
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate
     );
 }

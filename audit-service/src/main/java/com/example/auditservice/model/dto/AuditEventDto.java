@@ -3,6 +3,7 @@ package com.example.auditservice.model.dto;
 import com.example.auditservice.model.entity.Severity;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -16,4 +17,5 @@ public class AuditEventDto {
     private String serviceName;
     private String objectId;
     private String objectType;
+    private LocalDateTime timestamp;
 }

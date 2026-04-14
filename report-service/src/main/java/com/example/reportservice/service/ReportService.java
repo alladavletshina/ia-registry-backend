@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -81,12 +82,17 @@ public class ReportService {
         try {
             LocalDate endDate = LocalDate.now();
             LocalDate startDate = calculateStartDate(period, endDate);
+            log.info("=== ЗАПРОС АУДИТА за {} - {} ===", startDate, endDate);
             events = auditClient.getReportData(startDate.toString(), endDate.toString());
-            log.info("Fetched {} audit events for users report", events.size());
+            log.info("=== ПОЛУЧЕНО {} СОБЫТИЙ ===", events.size());
+            if (!events.isEmpty()) {
+                log.info("Первое событие: action={}, timestamp='{}'", events.get(0).getAction(), events.get(0).getTimestamp());
+            } else {
+                log.warn("Нет событий за период");
+            }
         } catch (Exception e) {
-            log.error("Failed to fetch audit events for users report: {}", e.getMessage(), e);
+            log.error("Ошибка получения событий: {}", e.getMessage(), e);
         }
-
         UsersReportDTO report = new UsersReportDTO();
         report.setActivityByRole(buildRoleActivity(events));
         report.setDailyActivity(buildDailyActivity(events));
@@ -395,20 +401,25 @@ public class ReportService {
         }
 
         for (AuditEventDTO event : events) {
-            if (event.getTimestamp() == null) continue;
-            LocalDate date = LocalDate.parse(event.getTimestamp().split("T")[0]);
-            int dayOfWeek = date.getDayOfWeek().getValue();
-            int[] stats = dayStats.get(dayOfWeek);
-            if ("LOGIN".equals(event.getAction())) {
-                stats[0]++;
-            } else {
-                stats[1]++;
+            String timestamp = event.getTimestamp();
+            if (timestamp == null || timestamp.isBlank()) continue;
+            try {
+                // Берём первые 10 символов (yyyy-MM-dd)
+                String datePart = timestamp.length() >= 10 ? timestamp.substring(0, 10) : timestamp;
+                LocalDate date = LocalDate.parse(datePart);
+                int dayOfWeek = date.getDayOfWeek().getValue();
+                int[] stats = dayStats.get(dayOfWeek);
+                if ("LOGIN".equals(event.getAction())) {
+                    stats[0]++;
+                } else {
+                    stats[1]++;
+                }
+            } catch (Exception e) {
+                log.warn("Не удалось распарсить timestamp '{}'", timestamp);
             }
         }
 
-        Map<Integer, String> dayNames = Map.of(
-                1, "Пн", 2, "Вт", 3, "Ср", 4, "Чт", 5, "Пт", 6, "Сб", 7, "Вс"
-        );
+        Map<Integer, String> dayNames = Map.of(1, "Пн", 2, "Вт", 3, "Ср", 4, "Чт", 5, "Пт", 6, "Сб", 7, "Вс");
         List<UsersReportDTO.DayActivity> result = new ArrayList<>();
         for (int i = 1; i <= 7; i++) {
             int[] stats = dayStats.get(i);
