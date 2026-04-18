@@ -35,7 +35,7 @@ public class Asset {
     private CIA availability;
 
     /*стоимость актива*/
-    @Column(precision = 19, scale = 2)
+    @Column(name = "\"value\"", precision = 19, scale = 2)
     private BigDecimal value;
 
     /* вес конфиденциальности*/
