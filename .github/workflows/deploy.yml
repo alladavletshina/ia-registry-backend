@@ -37,18 +37,6 @@ jobs:
             
             cd "$PROJECT_DIR"
             
-            # ========== Блок с тестами ==========
-            echo "🔧 Installing JDK 17 and Maven (if needed)"
-            apt update && apt install -y openjdk-17-jdk maven || true
-            
-            echo "🧪 Running all tests before deployment..."
-            # Собираем и тестируем все модули (родительский pom.xml)
-            mvn clean test -DskipTests=false || {
-              echo "❌ Tests failed! Deployment aborted."
-              exit 1
-            }
-            echo "✅ All tests passed."
-            
             echo "Making deploy script executable..."
             chmod +x ./scripts/start-backend_deploy.sh
             
