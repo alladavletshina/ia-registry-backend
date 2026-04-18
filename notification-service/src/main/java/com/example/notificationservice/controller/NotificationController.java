@@ -41,7 +41,7 @@ public class NotificationController {
     @GetMapping("/{id}")
     @Operation(summary = "Получить уведомление по ИД")
     public ResponseEntity<NotificationDto> getNotificationById(
-            @PathVariable UUID notificationId
+            @PathVariable("id") UUID notificationId
     ) {
         NotificationDto dto = notificationService.getNotificationById(notificationId);
         return ResponseEntity.ok(dto);
@@ -50,7 +50,7 @@ public class NotificationController {
     @PatchMapping("/read/{id}")
     @Operation(summary = "Отметить уведомление как прочитанное")
     public ResponseEntity<Void> markAsRead(
-            @PathVariable UUID notificationId
+            @PathVariable("id") UUID notificationId
     ) {
         notificationService.markAsRead(notificationId);
 
@@ -74,7 +74,7 @@ public class NotificationController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить уведомление")
     public ResponseEntity<Void> deleteNotification(
-            @PathVariable UUID notificationId
+            @PathVariable("id") UUID notificationId
     ) {
         notificationService.deleteNotification(notificationId);
         return ResponseEntity.noContent().build();
