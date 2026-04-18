@@ -6,13 +6,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  test-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run tests (excluding integration tests)
+        run: mvn clean test -Dtest='!*IntegrationTest'
+
       - name: Deploy via SSH using key
+        if: success()
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -23,9 +40,9 @@ jobs:
             echo "✅ SSH connection successful via KEY"
             whoami
             hostname
-            
+
             PROJECT_DIR="/root/ia-registry-backend"
-            
+
             if [ ! -d "$PROJECT_DIR" ]; then
               echo "Cloning repository..."
               git clone https://github.com/${{ github.repository }}.git "$PROJECT_DIR"
@@ -34,11 +51,11 @@ jobs:
               cd "$PROJECT_DIR"
               git pull
             fi
-            
+
             cd "$PROJECT_DIR"
-            
+
             echo "Making deploy script executable..."
             chmod +x ./scripts/start-backend_deploy.sh
-            
+
             echo "Running deploy script..."
             ./scripts/start-backend_deploy.sh
