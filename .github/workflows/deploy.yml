@@ -29,6 +29,7 @@ jobs:
         run: |
           mvn -f asset-service/pom.xml test -Dtest='!*IntegrationTest' -Dsurefire.failIfNoSpecifiedTests=false
           mvn -f task-service/pom.xml test -Dtest='!*IntegrationTest' -Dsurefire.failIfNoSpecifiedTests=false
+          mvn -f audit-service/pom.xml test -Dtest='!*IntegrationTest' -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Deploy via SSH using key
         if: success()
