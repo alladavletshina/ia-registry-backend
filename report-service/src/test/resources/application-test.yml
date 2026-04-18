@@ -1,0 +1,25 @@
+spring:
+  cache:
+    type: none
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/test
+
+services:
+  user-service:
+    url: http://localhost:9999
+  asset-service:
+    url: http://localhost:9999
+  task-service:
+    url: http://localhost:9999
+  audit-service:
+    url: http://localhost:9999
+
+logging:
+  level:
+    org.springframework: WARN
+    com.example.reportservice: DEBUG
