@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -47,7 +47,7 @@
 
         .services {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
@@ -55,7 +55,7 @@
         .service-card {
             background: white;
             border-radius: 15px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 2px solid transparent;
@@ -83,29 +83,33 @@
 
         .service-icon {
             font-size: 40px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: block;
         }
 
         h2 {
             color: #333;
-            margin-bottom: 15px;
-            font-size: 24px;
+            margin-bottom: 10px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         p {
             color: #666;
-            line-height: 1.6;
-            margin-bottom: 25px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
 
         .endpoints {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 12px;
             color: #666;
         }
 
@@ -117,12 +121,13 @@
 
         .btn {
             display: inline-block;
-            padding: 12px 24px;
+            padding: 8px 16px;
             background: #667eea;
             color: white;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
+            font-size: 13px;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
@@ -168,7 +173,7 @@
 
         .test-buttons {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
@@ -178,17 +183,17 @@
             padding: 20px;
             border-radius: 8px;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 13px;
             white-space: pre-wrap;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
         }
 
         .status {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             margin-left: 10px;
         }
@@ -214,11 +219,9 @@
             .services {
                 grid-template-columns: 1fr;
             }
-
             .test-buttons {
                 flex-direction: column;
             }
-
             .btn {
                 width: 100%;
                 text-align: center;
@@ -230,10 +233,11 @@
 <div class="container">
     <header>
         <h1>🏢 Asset Management System</h1>
-        <p class="subtitle">API Gateway & Service Dashboard</p>
+        <p class="subtitle">API Gateway & Service Dashboard (All Microservices)</p>
     </header>
 
     <div class="services">
+        <!-- API Gateway -->
         <div class="service-card gateway">
             <span class="service-icon">🚪</span>
             <h2>API Gateway</h2>
@@ -250,9 +254,10 @@
             </div>
         </div>
 
+        <!-- Auth Service -->
         <div class="service-card">
             <span class="service-icon">🔐</span>
-            <h2>Auth Service <span class="status status-up" id="auth-status">Checking...</span></h2>
+            <h2>Auth Service <span class="status" id="auth-status">Checking...</span></h2>
             <p>Authentication and authorization service with JWT token generation.</p>
             <div class="endpoints">
                 <strong>Auth Endpoints:</strong><br>
@@ -267,9 +272,10 @@
             </div>
         </div>
 
+        <!-- Asset Service -->
         <div class="service-card">
             <span class="service-icon">📊</span>
-            <h2>Asset Service <span class="status status-up" id="asset-status">Checking...</span></h2>
+            <h2>Asset Service <span class="status" id="asset-status">Checking...</span></h2>
             <p>Asset management with PostgreSQL database and role-based access.</p>
             <div class="endpoints">
                 <strong>Asset Endpoints:</strong><br>
@@ -283,15 +289,110 @@
                 <a href="/api/assets/health" class="btn btn-outline" target="_blank">Test Health</a>
             </div>
         </div>
+
+        <!-- User Service -->
+        <div class="service-card">
+            <span class="service-icon">👥</span>
+            <h2>User Service <span class="status" id="user-status">Checking...</span></h2>
+            <p>User management, profiles, roles, and registration.</p>
+            <div class="endpoints">
+                <strong>User Endpoints:</strong><br>
+                • GET /api/users<br>
+                • GET /api/users/me<br>
+                • POST /api/users/register
+            </div>
+            <div class="btn-group">
+                <a href="/user-swagger-ui/" class="btn" target="_blank">User Swagger UI</a>
+                <a href="http://localhost:8085/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/users/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
+
+        <!-- Task Service -->
+        <div class="service-card">
+            <span class="service-icon">✅</span>
+            <h2>Task Service <span class="status" id="task-status">Checking...</span></h2>
+            <p>Task creation, assignment, tracking, and overdue notifications.</p>
+            <div class="endpoints">
+                <strong>Task Endpoints:</strong><br>
+                • GET /api/tasks<br>
+                • POST /api/tasks<br>
+                • GET /api/tasks/stats
+            </div>
+            <div class="btn-group">
+                <a href="/task-swagger-ui/" class="btn" target="_blank">Task Swagger UI</a>
+                <a href="http://localhost:8086/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/tasks/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
+
+        <!-- Notification Service -->
+        <div class="service-card">
+            <span class="service-icon">🔔</span>
+            <h2>Notification Service <span class="status" id="notification-status">Checking...</span></h2>
+            <p>Real-time notifications, WebSocket, email alerts.</p>
+            <div class="endpoints">
+                <strong>Notification Endpoints:</strong><br>
+                • GET /api/notifications<br>
+                • POST /api/notifications<br>
+                • GET /api/notifications/unread-count
+            </div>
+            <div class="btn-group">
+                <a href="/notification-swagger-ui/" class="btn" target="_blank">Notification Swagger UI</a>
+                <a href="http://localhost:8087/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/notifications/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
+
+        <!-- Audit Service -->
+        <div class="service-card">
+            <span class="service-icon">📜</span>
+            <h2>Audit Service <span class="status" id="audit-status">Checking...</span></h2>
+            <p>Audit logging of all user actions and data changes.</p>
+            <div class="endpoints">
+                <strong>Audit Endpoints:</strong><br>
+                • GET /api/audit<br>
+                • GET /api/audit/stats<br>
+                • GET /api/audit/export
+            </div>
+            <div class="btn-group">
+                <a href="/audit-swagger-ui/" class="btn" target="_blank">Audit Swagger UI</a>
+                <a href="http://localhost:8088/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/audit/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
+
+        <!-- Report Service -->
+        <div class="service-card">
+            <span class="service-icon">📈</span>
+            <h2>Report Service <span class="status" id="report-status">Checking...</span></h2>
+            <p>Analytics reports, charts, PDF/Excel export.</p>
+            <div class="endpoints">
+                <strong>Report Endpoints:</strong><br>
+                • GET /api/reports/overview<br>
+                • GET /api/reports/assets<br>
+                • GET /api/reports/security
+            </div>
+            <div class="btn-group">
+                <a href="/report-swagger-ui/" class="btn" target="_blank">Report Swagger UI</a>
+                <a href="http://localhost:8089/swagger-ui.html" class="btn btn-success" target="_blank">Direct Access</a>
+                <a href="/api/reports/health" class="btn btn-outline" target="_blank">Test Health</a>
+            </div>
+        </div>
     </div>
 
     <div class="test-section">
         <h3>🔧 Quick API Tests</h3>
         <div class="test-buttons">
             <button onclick="testGateway()" class="btn">Test Gateway</button>
-            <button onclick="testAuth()" class="btn btn-success">Test Auth Service</button>
-            <button onclick="testAsset()" class="btn btn-success">Test Asset Service</button>
-            <button onclick="testLogin()" class="btn">Test Login</button>
+            <button onclick="testAuth()" class="btn">Test Auth</button>
+            <button onclick="testAsset()" class="btn">Test Asset</button>
+            <button onclick="testUser()" class="btn">Test User</button>
+            <button onclick="testTask()" class="btn">Test Task</button>
+            <button onclick="testNotification()" class="btn">Test Notification</button>
+            <button onclick="testAudit()" class="btn">Test Audit</button>
+            <button onclick="testReport()" class="btn">Test Report</button>
+            <button onclick="testLogin()" class="btn btn-success">Test Login</button>
         </div>
         <div id="test-results">Click any test button to see results...</div>
     </div>
@@ -301,57 +402,49 @@
         <div class="btn-group">
             <a href="/" class="btn">Home Dashboard</a>
             <a href="/swagger-ui.html" class="btn" target="_blank">Gateway Swagger</a>
-            <a href="/auth-swagger-ui/" class="btn btn-success" target="_blank">Auth Swagger</a>
-            <a href="/asset-swagger-ui/" class="btn btn-success" target="_blank">Asset Swagger</a>
-            <a href="/api/gateway/services" class="btn btn-outline" target="_blank">All Services</a>
+            <a href="/auth-swagger-ui/" class="btn" target="_blank">Auth Swagger</a>
+            <a href="/asset-swagger-ui/" class="btn" target="_blank">Asset Swagger</a>
+            <a href="/user-swagger-ui/" class="btn" target="_blank">User Swagger</a>
+            <a href="/task-swagger-ui/" class="btn" target="_blank">Task Swagger</a>
+            <a href="/notification-swagger-ui/" class="btn" target="_blank">Notification Swagger</a>
+            <a href="/audit-swagger-ui/" class="btn" target="_blank">Audit Swagger</a>
+            <a href="/report-swagger-ui/" class="btn" target="_blank">Report Swagger</a>
+            <a href="/api/gateway/services" class="btn btn-outline" target="_blank">All Services JSON</a>
         </div>
     </div>
 
     <footer>
         <p>Asset Management System v1.0.0 | Spring Boot 3.1.5 | Running on: http://localhost:8082</p>
-        <p>Services: Auth(8083), Asset(8084), Keycloak(8080)</p>
+        <p>Services: Auth(8083), Asset(8084), User(8085), Task(8086), Notification(8087), Audit(8088), Report(8089), Keycloak(8080)</p>
     </footer>
 </div>
 
 <script>
-    // Check services status on load
+    // Check all services status on load
     document.addEventListener('DOMContentLoaded', function() {
-        checkGatewayStatus();
-        checkAuthStatus();
-        checkAssetStatus();
+        checkStatus('auth', '/api/auth/health');
+        checkStatus('asset', '/api/assets/health');
+        checkStatus('user', '/api/users/health');
+        checkStatus('task', '/api/tasks/health');
+        checkStatus('notification', '/api/notifications/health');
+        checkStatus('audit', '/api/audit/health');
+        checkStatus('report', '/api/reports/health');
     });
 
-    async function checkGatewayStatus() {
+    async function checkStatus(service, url) {
+        const statusSpan = document.getElementById(`${service}-status`);
         try {
-            const response = await fetch('/api/gateway/health');
-            const data = await response.json();
-            document.getElementById('gateway-status').innerHTML = 'Gateway Status: <span class="status status-up">UP ✓</span>';
+            const response = await fetch(url);
+            if (response.ok) {
+                statusSpan.textContent = 'UP ✓';
+                statusSpan.className = 'status status-up';
+            } else {
+                statusSpan.textContent = 'DOWN ✗';
+                statusSpan.className = 'status status-down';
+            }
         } catch (error) {
-            document.getElementById('gateway-status').innerHTML = 'Gateway Status: <span class="status status-down">DOWN ✗</span>';
-        }
-    }
-
-    async function checkAuthStatus() {
-        try {
-            const response = await fetch('/api/auth/health');
-            const data = await response.json();
-            document.getElementById('auth-status').textContent = 'UP ✓';
-            document.getElementById('auth-status').className = 'status status-up';
-        } catch (error) {
-            document.getElementById('auth-status').textContent = 'DOWN ✗';
-            document.getElementById('auth-status').className = 'status status-down';
-        }
-    }
-
-    async function checkAssetStatus() {
-        try {
-            const response = await fetch('/api/assets/health');
-            const text = await response.text();
-            document.getElementById('asset-status').textContent = 'UP ✓';
-            document.getElementById('asset-status').className = 'status status-up';
-        } catch (error) {
-            document.getElementById('asset-status').textContent = 'DOWN ✗';
-            document.getElementById('asset-status').className = 'status status-down';
+            statusSpan.textContent = 'DOWN ✗';
+            statusSpan.className = 'status status-down';
         }
     }
 
@@ -385,6 +478,56 @@
         }
     }
 
+    async function testUser() {
+        try {
+            const response = await fetch('/api/users/health');
+            const text = await response.text();
+            showResult('User Service Test', { response: text });
+        } catch (error) {
+            showResult('User Service Test', { error: error.message });
+        }
+    }
+
+    async function testTask() {
+        try {
+            const response = await fetch('/api/tasks/health');
+            const text = await response.text();
+            showResult('Task Service Test', { response: text });
+        } catch (error) {
+            showResult('Task Service Test', { error: error.message });
+        }
+    }
+
+    async function testNotification() {
+        try {
+            const response = await fetch('/api/notifications/health');
+            const text = await response.text();
+            showResult('Notification Service Test', { response: text });
+        } catch (error) {
+            showResult('Notification Service Test', { error: error.message });
+        }
+    }
+
+    async function testAudit() {
+        try {
+            const response = await fetch('/api/audit/health');
+            const text = await response.text();
+            showResult('Audit Service Test', { response: text });
+        } catch (error) {
+            showResult('Audit Service Test', { error: error.message });
+        }
+    }
+
+    async function testReport() {
+        try {
+            const response = await fetch('/api/reports/health');
+            const text = await response.text();
+            showResult('Report Service Test', { response: text });
+        } catch (error) {
+            showResult('Report Service Test', { error: error.message });
+        }
+    }
+
     async function testLogin() {
         try {
             const response = await fetch('/api/auth/login', {
@@ -408,11 +551,11 @@
         const resultsDiv = document.getElementById('test-results');
         const timestamp = new Date().toLocaleTimeString();
         resultsDiv.innerHTML = `
-                <strong>${testName} - ${timestamp}</strong>
-                <pre>${JSON.stringify(result, null, 2)}</pre>
-                <hr>
-                ${resultsDiv.innerHTML}
-            `;
+            <strong>${testName} - ${timestamp}</strong>
+            <pre>${JSON.stringify(result, null, 2)}</pre>
+            <hr>
+            ${resultsDiv.innerHTML}
+        `;
     }
 </script>
 </body>
