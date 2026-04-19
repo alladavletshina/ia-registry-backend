@@ -13,7 +13,7 @@
     </parent>
 
     <groupId>com.asset</groupId>
-    <artifactId>asset-service</artifactId>
+    <artifactId>user-service</artifactId>
     <version>1.0.0</version>
 
     <properties>

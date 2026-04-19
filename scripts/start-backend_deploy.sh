@@ -12,7 +12,7 @@ cd "$PROJECT_ROOT" || exit 1
 echo "1. Checking project structure..."
 
 # Проверяем обязательные директории (ядро системы)
-CORE_SERVICES=("api-gateway" "auth-service" "asset-service")
+CORE_SERVICES=("api-gateway" "asset-service")
 for dir in "${CORE_SERVICES[@]}"; do
     if [ ! -d "$dir" ]; then
         echo "ERROR: Core directory '$dir' not found!"
@@ -91,7 +91,6 @@ FAILED_BUILDS=0
 
 echo "Building core services..."
 build_service "api-gateway" || FAILED_BUILDS=$((FAILED_BUILDS + 1))
-build_service "auth-service" || FAILED_BUILDS=$((FAILED_BUILDS + 1))
 build_service "asset-service" || FAILED_BUILDS=$((FAILED_BUILDS + 1))
 
 echo "Building additional services..."
@@ -145,15 +144,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
-    depends_on:
-      - keycloak
-
-  auth-service:
-    build:
-      context: ./auth-service
-      dockerfile: Dockerfile
-    ports:
-      - "8083:8083"
     depends_on:
       - keycloak
 
@@ -294,7 +284,6 @@ echo "5. Waiting for services to start..."
 
 SERVICES_TO_CHECK=(
     "8082:API Gateway"
-    "8083:Auth Service"
     "8084:Asset Service"
 )
 
@@ -520,7 +509,6 @@ check_service() {
 
 check_service "Keycloak" "http://localhost:8080"
 check_service "API Gateway" "http://localhost:8082"
-check_service "Auth Service" "http://localhost:8083/actuator/health"
 check_service "Asset Service" "http://localhost:8084/actuator/health"
 
 [ "$SKIP_USER_SERVICE" = "false" ] && check_service "User Service" "http://localhost:8085/actuator/health"
@@ -536,7 +524,6 @@ echo ""
 echo "🌐 Services:"
 echo "   Keycloak:           http://localhost:8080 (admin/admin123)"
 echo "   API Gateway:        http://localhost:8082"
-echo "   Auth Service:       http://localhost:8083"
 echo "   Asset Service:      http://localhost:8084"
 [ "$SKIP_USER_SERVICE" = "false" ] && echo "   User Service:        http://localhost:8085"
 [ "$SKIP_TASK_SERVICE" = "false" ] && echo "   Task Service:        http://localhost:8086"
@@ -548,22 +535,15 @@ echo ""
 echo "📚 Documentation:"
 echo "   Gateway Dashboard:    http://localhost:8082/"
 echo "   Gateway Swagger:      http://localhost:8082/swagger-ui.html"
-echo "   Auth Swagger:         http://localhost:8082/auth-swagger-ui/"
 echo "   Asset Swagger:        http://localhost:8082/asset-swagger-ui/"
 [ "$SKIP_USER_SERVICE" = "false" ] && echo "   User Swagger:        http://localhost:8082/user-swagger-ui/"
 [ "$SKIP_TASK_SERVICE" = "false" ] && echo "   Task Swagger:        http://localhost:8082/task-swagger-ui/"
 echo ""
 echo "🔧 Quick Tests:"
 echo "   curl http://localhost:8082/api/gateway/health"
-echo "   curl http://localhost:8082/api/auth/health"
 echo "   curl http://localhost:8082/api/assets/health"
 [ "$SKIP_USER_SERVICE" = "false" ] && echo "   curl http://localhost:8082/api/users/health"
 [ "$SKIP_TASK_SERVICE" = "false" ] && echo "   curl http://localhost:8082/api/tasks/health"
-echo ""
-echo "🔐 Test Authentication:"
-echo "   curl -X POST http://localhost:8082/api/auth/login \\"
-echo '     -H "Content-Type: application/json" \'
-echo '     -d '\''{"username": "admin", "password": "admin123"}'\'''
 echo ""
 echo "⚙️  Configuration:"
 echo "   Core services: ✅ Always started"

@@ -49,15 +49,6 @@ public class GatewayController {
                 "dashboard", "http://localhost:8082/"
         ));
 
-        services.put("auth", Map.of(
-                "name", "Auth Service",
-                "url", "http://localhost:8083",
-                "gatewayDocs", "http://localhost:8082/auth-api-docs",
-                "swagger", "http://localhost:8082/auth-swagger-ui/",
-                "directSwagger", "http://localhost:8083/swagger-ui.html",
-                "health", "http://localhost:8082/api/auth/health"
-        ));
-
         services.put("asset", Map.of(
                 "name", "Asset Service",
                 "url", "http://localhost:8084",
@@ -129,11 +120,6 @@ public class GatewayController {
                         "swagger-ui", "http://localhost:8082/swagger-ui.html",
                         "api-docs", "http://localhost:8082/api-docs",
                         "dashboard", "http://localhost:8082/"
-                ),
-                "auth", Map.of(
-                        "swagger-ui", "http://localhost:8082/auth-swagger-ui/",
-                        "api-docs", "http://localhost:8082/auth-api-docs",
-                        "direct", "http://localhost:8083/swagger-ui.html"
                 ),
                 "asset", Map.of(
                         "swagger-ui", "http://localhost:8082/asset-swagger-ui/",

@@ -29,13 +29,12 @@ public class AggregatedSwaggerConfig {
                             
                             ### Available services:
                             1. **API Gateway** (`/api/gateway/**`) - routing and gateway information
-                            2. **Auth Service** (`/api/auth/**`) - authentication
-                            3. **Asset Service** (`/api/assets/**`) - asset management
-                            4. **User Service** (`/api/users/**`) - user management
-                            5. **Task Service** (`/api/tasks/**`) - task management
-                            6. **Notification Service** (`/api/notifications/**`) - user notifications
-                            7. **Audit Service** (`/api/audit/**`) - audit logs
-                            8. **Report Service** (`/api/reports/**`) - analytics reports
+                            2. **Asset Service** (`/api/assets/**`) - asset management
+                            3. **User Service** (`/api/users/**`) - user management
+                            4. **Task Service** (`/api/tasks/**`) - task management
+                            5. **Notification Service** (`/api/notifications/**`) - user notifications
+                            6. **Audit Service** (`/api/audit/**`) - audit logs
+                            7. **Report Service** (`/api/reports/**`) - analytics reports
                             
                             ### How to use:
                             1. Select a service from the dropdown in the top-right corner
@@ -68,10 +67,6 @@ public class AggregatedSwaggerConfig {
         servers.add(new Server()
                 .url("http://localhost:8082")
                 .description("API Gateway (local development)"));
-
-        servers.add(new Server()
-                .url("http://auth-service:8083")
-                .description("Auth Service (direct)"));
 
         servers.add(new Server()
                 .url("http://asset-service:8084")

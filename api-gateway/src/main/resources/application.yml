@@ -23,11 +23,6 @@ spring:
         response-timeout: 5s
       routes:
         # Основные сервисы
-        - id: auth-service
-          uri: http://auth-service:8083
-          predicates:
-            - Path=/api/auth/**
-
         - id: asset-service
           uri: http://asset-service:8084
           predicates:
@@ -59,20 +54,6 @@ spring:
             - Path=/api/reports/**
 
         # Swagger UI для всех сервисо
-        - id: auth-swagger
-          uri: http://auth-service:8083
-          predicates:
-            - Path=/auth-swagger-ui/**
-          filters:
-            - RewritePath=/auth-swagger-ui/(?<segment>.*), /$\{segment}
-
-        - id: auth-api-docs
-          uri: http://auth-service:8083
-          predicates:
-            - Path=/auth-api-docs/**
-          filters:
-            - RewritePath=/auth-api-docs/(?<segment>.*), /$\{segment}
-
         - id: asset-swagger
           uri: http://asset-service:8084
           predicates:
@@ -188,8 +169,6 @@ springdoc:
     urls:
       - url: /v3/api-docs
         name: API Gateway
-      - url: /auth-api-docs/v3/api-docs
-        name: Auth Service
       - url: /asset-api-docs/v3/api-docs
         name: Asset Service
       - url: /user-api-docs/v3/api-docs
