@@ -105,7 +105,7 @@ if [ $FAILED_BUILDS -gt 0 ]; then
 fi
 
 # 3. Проверяем наличие docker-compose файла
-COMPOSE_FILES=("docker-compose.yml" "docker-compose.keycloak.yml" "docker-compose.full.yml")
+COMPOSE_FILES=("docker-compose.yml" "docker-compose.keycloak.prod.yml" "docker-compose.full.yml")
 COMPOSE_FILE=""
 
 for file in "${COMPOSE_FILES[@]}"; do
