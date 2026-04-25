@@ -46,7 +46,7 @@ class ThreatControllerTest {
         threat.setInclusionDate(LocalDate.now());
 
         Page<Threat> page = new PageImpl<>(List.of(threat));
-        // Мокаем метод поиска по имени, так как в запросе передан параметр search
+
         when(threatRepository.findByNameContainingIgnoreCase(eq("Test"), any(Pageable.class)))
                 .thenReturn(page);
 
