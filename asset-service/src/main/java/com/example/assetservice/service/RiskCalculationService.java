@@ -64,11 +64,10 @@ public class RiskCalculationService {
      */
     private BigDecimal calculateDamage(AssetThreat at) {
         Asset asset = at.getAsset();
-        // Скорректированная вероятность с учётом мер защиты (формула 4)
+
         BigDecimal effectiveProbability = at.getProbability()
                 .multiply(BigDecimal.ONE.subtract(at.getMitigationEffect()));
 
-        // Флаги влияния: custom если задан, иначе из угрозы
         boolean c = at.getCustomC() != null ? at.getCustomC() : at.getThreat().isConfidentiality();
         boolean i = at.getCustomI() != null ? at.getCustomI() : at.getThreat().isIntegrity();
         boolean a = at.getCustomA() != null ? at.getCustomA() : at.getThreat().isAvailability();

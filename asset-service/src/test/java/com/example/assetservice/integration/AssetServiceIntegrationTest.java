@@ -191,7 +191,7 @@ class AssetServiceIntegrationTest {
         request.setConfidentiality(CIA.CRITICAL);
         request.setIntegrity(CIA.CRITICAL);
         request.setAvailability(CIA.CRITICAL);
-        // Исправлено: убрано подчёркивание из строки
+
         request.setValue(BigDecimal.valueOf(1_000_000));
 
         Asset asset = assetService.createAsset(request, mockJwt, "127.0.0.1");

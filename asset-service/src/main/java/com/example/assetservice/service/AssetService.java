@@ -51,7 +51,6 @@ public class AssetService {
         asset.setLocation(request.getLocation());
         asset.setTags(request.getTags());
 
-        // Новые поля для расчетов
         asset.setValue(request.getValue());
         asset.setWeightC(request.getWeightC() != null ? request.getWeightC() : 1);
         asset.setWeightI(request.getWeightI() != null ? request.getWeightI() : 1);
@@ -66,7 +65,6 @@ public class AssetService {
 
         Asset saved = assetRepository.save(asset);
 
-        // Пересчёт риска (пока угроз нет, риск будет 0, но создаётся запись в risk_history)
         riskCalculationService.calculateRiskForAsset(saved);
 
         /* Отправка события аудита */
@@ -116,7 +114,6 @@ public class AssetService {
         response.setCreatedAt(asset.getCreatedAt());
         response.setUpdatedAt(asset.getUpdatedAt());
 
-        // Новые поля для расчетов
         response.setValue(asset.getValue());
         response.setWeightC(asset.getWeightC());
         response.setWeightI(asset.getWeightI());
@@ -127,7 +124,6 @@ public class AssetService {
             response.setGroupName(asset.getGroup().getName());
         }
 
-        // Получаем последний риск для актива
         List<Risk> risks = riskRepository.findByAssetOrderByCalculationDateDesc(asset);
         if (!risks.isEmpty()) {
             response.setLatestRisk(risks.get(0).getCalculatedRisk());
@@ -147,7 +143,6 @@ public class AssetService {
         Asset asset = assetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Актив с id " + id + " не найден"));
 
-        // Обновление существующих полей
         asset.setName(request.getName());
         asset.setOwnerId(request.getOwnerId());
         asset.setStatus(request.getStatus());
@@ -159,7 +154,6 @@ public class AssetService {
         asset.setLocation(request.getLocation());
         asset.setTags(request.getTags());
 
-        // Новые поля для расчетов
         asset.setValue(request.getValue());
         asset.setWeightC(request.getWeightC() != null ? request.getWeightC() : 1);
         asset.setWeightI(request.getWeightI() != null ? request.getWeightI() : 1);
@@ -178,10 +172,9 @@ public class AssetService {
 
         Asset saved = assetRepository.save(asset);
 
-        // Пересчёт риска после обновления
         riskCalculationService.calculateRiskForAsset(saved);
 
-        // Отправка события аудита
+        /* Отправка события аудита */
         AuditEventDto event = new AuditEventDto();
         event.setUserId(UUID.fromString(jwt.getSubject()));
         event.setUsername(jwt.getClaim("preferred_username"));
@@ -285,7 +278,7 @@ public class AssetService {
         asset.setUpdatedAt(LocalDateTime.now());
         Asset saved = assetRepository.save(asset);
 
-        // Отправляем аудит
+        /* Отправляем аудит */
         AuditEventDto event = new AuditEventDto();
         event.setUserId(UUID.fromString(jwt.getSubject()));
         event.setUsername(jwt.getClaim("preferred_username"));

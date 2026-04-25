@@ -26,7 +26,6 @@ public class OdsThreatParser implements FstecThreatParser {
         OdfSpreadsheetDocument document = (OdfSpreadsheetDocument) OdfSpreadsheetDocument.loadDocument(inputStream);
         OdfTable table = document.getTableList().get(0); // первый лист
 
-        // Пропускаем заголовок (первая строка)
         for (int i = 2; i < table.getRowCount(); i++) {
             OdfTableRow row = table.getRowByIndex(i);
             if (row == null) continue;

@@ -36,7 +36,7 @@ class AssetServiceTest {
 
     @Test
     void createAsset_shouldSaveAndReturnAsset() {
-        // given
+
         CreateAssetRequest request = new CreateAssetRequest();
         request.setName("Test Asset");
         request.setStatus(AssetStatus.ACTIVE);
@@ -54,10 +54,8 @@ class AssetServiceTest {
         savedAsset.setName(request.getName());
         when(assetRepository.save(any(Asset.class))).thenReturn(savedAsset);
 
-        // when
         Asset result = assetService.createAsset(request, jwt, "127.0.0.1");
 
-        // then
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Test Asset");
         verify(assetRepository, times(1)).save(any(Asset.class));

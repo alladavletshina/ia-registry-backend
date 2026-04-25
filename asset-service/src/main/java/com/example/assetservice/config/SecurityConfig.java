@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Публичные эндпоинты (оставим для фильтрации, но лучше использовать web.ignoring)
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/assets/health",
             "/api/assets/actuator/health",
@@ -38,7 +37,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Публичные эндпоинты (если не попали в web.ignoring)
+
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/assets/**").hasAnyRole("admin", "user")
@@ -48,7 +47,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/assets/**").hasAnyRole("admin", "user")
                         .requestMatchers("/api/asset/admin/**").hasRole("admin")
 
-                        // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -68,7 +66,6 @@ public class SecurityConfig {
                 "/api-docs/**",
                 "/swagger-ui.html",
 
-                // Actuator health endpoints
                 "/actuator/health",
                 "/actuator/info",
                 "/api/assets/health",

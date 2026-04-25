@@ -71,7 +71,7 @@ class RiskCalculationServiceTest {
 
     @Test
     void calculateRiskForAsset_noThreats_shouldReturnZeroRisk() {
-        // given
+
         Asset asset = createAsset(1L, new BigDecimal("100000"), 1, 1, 1);
         when(assetThreatRepository.findByAssetAndStatus(asset, "ACTIVE")).thenReturn(List.of());
 
@@ -79,10 +79,8 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(BigDecimal.ZERO);
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(BigDecimal.ZERO);
         ArgumentCaptor<Risk> riskCaptor = ArgumentCaptor.forClass(Risk.class);
         verify(riskRepository).save(riskCaptor.capture());

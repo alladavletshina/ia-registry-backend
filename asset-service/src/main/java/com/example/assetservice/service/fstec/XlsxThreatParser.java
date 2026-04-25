@@ -24,7 +24,6 @@ public class XlsxThreatParser implements FstecThreatParser {
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Первая и 2-я строка — заголовок, данные начинаются с 3 строки (индекс 2)
             int rowStart = 2;
             for (int i = rowStart; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
@@ -40,7 +39,7 @@ public class XlsxThreatParser implements FstecThreatParser {
                         threat.setId(Long.parseLong(idStr));
                     }
                 } else {
-                    threat.setId(null); // или пропустить строку
+                    threat.setId(null);
                 }         // Идентификатор
                 threat.setName(getStringCellValue(row.getCell(1)));        // Наименование
                 threat.setDescription(getStringCellValue(row.getCell(2))); // Описание
@@ -68,7 +67,7 @@ public class XlsxThreatParser implements FstecThreatParser {
             case STRING:
                 return cell.getStringCellValue().trim();
             case NUMERIC:
-                // если число записано как текст, оно может быть числовым
+
                 return String.valueOf((long) cell.getNumericCellValue());
             default:
                 return "";
@@ -94,7 +93,7 @@ public class XlsxThreatParser implements FstecThreatParser {
             if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
                 return cell.getLocalDateTimeCellValue().toLocalDate();
             }
-            // если дата в виде строки
+
             String str = getStringCellValue(cell);
             if (!str.isEmpty()) {
                 return LocalDate.parse(str, DATE_FORMATTER);

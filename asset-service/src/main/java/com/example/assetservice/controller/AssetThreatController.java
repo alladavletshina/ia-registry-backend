@@ -58,7 +58,6 @@ public class AssetThreatController {
         Threat threat = threatRepository.findById(request.getThreatId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Угроза не найдена"));
 
-        // Проверяем, нет ли уже такой активной связи
         if (assetThreatRepository.findByAssetAndThreat(asset, threat).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Угроза уже привязана к активу");
         }
@@ -75,7 +74,6 @@ public class AssetThreatController {
 
         AssetThreat saved = assetThreatRepository.save(at);
 
-        // Пересчитываем риск после добавления угрозы
         riskCalculationService.calculateRiskForAsset(asset);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(AssetThreatDto.fromEntity(saved));
@@ -106,7 +104,6 @@ public class AssetThreatController {
 
         AssetThreat updated = assetThreatRepository.save(at);
 
-        // Пересчитываем риск после изменения
         riskCalculationService.calculateRiskForAsset(asset);
 
         return ResponseEntity.ok(AssetThreatDto.fromEntity(updated));
@@ -127,10 +124,9 @@ public class AssetThreatController {
         AssetThreat at = assetThreatRepository.findByAssetAndThreat(asset, threat)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Связь не найдена"));
 
-        at.setStatus("RESOLVED"); // мягкое удаление
+        at.setStatus("RESOLVED");
         assetThreatRepository.save(at);
 
-        // Пересчитываем риск после удаления угрозы
         riskCalculationService.calculateRiskForAsset(asset);
 
         return ResponseEntity.noContent().build();
