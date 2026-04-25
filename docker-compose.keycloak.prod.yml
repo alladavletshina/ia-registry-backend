@@ -66,8 +66,8 @@ services:
     build: asset-service
     ports:
       - "8084:8084"
-#    extra_hosts:
-#      - "api.myiam.ru:host-gateway"
+    extra_hosts:
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-assets:5432/assets
@@ -94,8 +94,8 @@ services:
     build: ./user-service
     ports:
       - "8085:8080"
-#    extra_hosts:
-#      - "api.myiam.ru:host-gateway"
+    extra_hosts:
+      - "api.myiam.ru:host-gateway"
     environment:
       KEYCLOAK_URL: http://keycloak:8080
       DB_URL: jdbc:postgresql://postgres-users:5432/users
