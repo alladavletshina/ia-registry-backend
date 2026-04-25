@@ -41,7 +41,7 @@ public class SecurityConfig {
                         // Публичные эндпоинты (если не попали в web.ignoring)
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/audit/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/audit/**").hasRole("admin")
                         .requestMatchers(HttpMethod.POST, "/api/audit/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/audit/**").hasRole("admin")
                         .requestMatchers(HttpMethod.PUT, "/api/audit/**").hasRole("admin")
