@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/assets/threats")
 @RequiredArgsConstructor
@@ -55,14 +57,20 @@ public class ThreatController {
     }
 
     @PostMapping("/sync")
-    @Operation(summary = "Запустить синхронизацию с БДУ ФСТЭК вручную",
-            description = "Инициирует процесс скачивания и обновления данных угроз из файла ФСТЭК. Может выполняться несколько секунд.")
+    @Operation(summary = "Запустить синхронизацию с БДУ ФСТЭК вручную")
     public ResponseEntity<String> syncThreats() {
         try {
-            fstecSyncService.syncThreats();
-            return ResponseEntity.ok("Синхронизация с ФСТЭК успешно запущена. Проверьте логи для деталей.");
+            boolean success = fstecSyncService.syncThreats();
+            if (success) {
+                return ResponseEntity.ok("Синхронизация с ФСТЭК успешно выполнена. База угроз обновлена.");
+            } else {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body("Сервис временно недоступен. Попробуйте загрузить файл вручную через кнопку «Загрузить XLSX».");
+            }
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Ошибка при синхронизации: " + e.getMessage());
+            log.error("Исключение при синхронизации", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ошибка при синхронизации: " + e.getMessage());
         }
     }
 

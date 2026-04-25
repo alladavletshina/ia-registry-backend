@@ -17,6 +17,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -31,56 +32,49 @@ public class FstecSyncService {
     private final FstecConfig fstecConfig;
     private final XlsxThreatParser xlsxThreatParser;
     private final OdsThreatParser odsThreatParser;
-    private final RestTemplate restTemplate; // нужно добавить бин в конфигурацию
+    private final RestTemplate restTemplate;
 
     /**
-     * Основной метод синхронизации, вызываемый по расписанию или вручную.
-     * Пытается скачать файл с URL, при неудаче использует fallback из classpath.
+     * Основной метод синхронизации – только попытка скачать с URL.
+     * При неудаче логирует и завершается (без исключения).
      */
     @Retryable(maxAttempts = 1, backoff = @Backoff(delay = 5000, multiplier = 2))
     @Transactional
-    public void syncThreats() {
+    public boolean syncThreats() {
         log.info("Запуск синхронизации угроз");
         try (InputStream inputStream = getThreatInputStream()) {
             if (inputStream == null) {
-                log.error("Не удалось получить поток данных угроз ни из URL, ни из fallback-файла");
-                return;
+                log.error("Не удалось получить файл угроз, синхронизация прервана");
+                return false;
             }
             syncFromInputStream(inputStream);
+            return true;
         } catch (Exception e) {
             log.error("Ошибка синхронизации: {}", e.getMessage(), e);
-            throw new RuntimeException("Ошибка синхронизации", e);
+            return false;
         }
     }
 
     /**
-     * Получение InputStream через попытку скачать по URL или fallback в classpath.
+     * Попытка скачать файл по URL.
+     * @return InputStream или null, если скачать не удалось
      */
     private InputStream getThreatInputStream() throws IOException {
-        // 1) Пытаемся скачать с URL
-        if (fstecConfig.getThreatUrl() != null && !fstecConfig.getThreatUrl().isEmpty()) {
-            try {
-                log.info("Попытка скачать файл угроз с URL: {}", fstecConfig.getThreatUrl());
-                byte[] fileBytes = downloadFile(fstecConfig.getThreatUrl());
-                log.info("Файл успешно скачан, размер {} байт", fileBytes.length);
-                return new java.io.ByteArrayInputStream(fileBytes);
-            } catch (Exception e) {
-                log.warn("Не удалось скачать файл по URL: {}", e.getMessage());
-            }
+        if (fstecConfig.getThreatUrl() == null || fstecConfig.getThreatUrl().isEmpty()) {
+            log.warn("URL для скачивания угроз не задан в конфигурации");
+            return null;
         }
-
-        // 2) Fallback – файл из classpath
-        log.info("Используем fallback-файл из classpath: {}", fstecConfig.getFallbackFilePath());
-        InputStream fallbackStream = getClass().getResourceAsStream(fstecConfig.getFallbackFilePath());
-        if (fallbackStream == null) {
-            log.error("Fallback-файл не найден в classpath по пути {}", fstecConfig.getFallbackFilePath());
+        try {
+            log.info("Попытка скачать файл угроз с URL: {}", fstecConfig.getThreatUrl());
+            byte[] fileBytes = downloadFile(fstecConfig.getThreatUrl());
+            log.info("Файл успешно скачан, размер {} байт", fileBytes.length);
+            return new ByteArrayInputStream(fileBytes);
+        } catch (Exception e) {
+            log.warn("Не удалось скачать файл по URL: {}", e.getMessage());
+            return null;
         }
-        return fallbackStream;
     }
 
-    /**
-     * Скачивание файла по URL с настройками таймаутов.
-     */
     private byte[] downloadFile(String url) {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.USER_AGENT, "AssetManagementSystem/1.0");
