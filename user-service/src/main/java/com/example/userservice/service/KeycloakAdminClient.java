@@ -49,10 +49,6 @@ public class KeycloakAdminClient {
             user.setEnabled(true);
             user.setEmailVerified(true);
 
-            //добавлю позже верификацию через почту
-            //user.setRequiredActions(Collections.singletonList("VERIFY_EMAIL"));
-
-            //Создаем пользователя
             ObjectMapper objectMapper = new ObjectMapper();
             log.info("Sending to Keycloak: {}", objectMapper.writeValueAsString(user));
 
@@ -68,15 +64,10 @@ public class KeycloakAdminClient {
                 throw new RuntimeException("Ошибка создания пользователя в Keycloak: " + response.getStatus());
             }
 
-            //Получаем ID созданного пользователя из Location header
             String userId = extractUserId(response);
             log.info("Пользователь создан в Keycloak с ID: {}", userId);
 
-            //Устанавливаем пароль
             setUserPassword(userId, password);
-
-            //Отправляем письмо с подтверждением email
-            //usersResource.get(userId).sendVerifyEmail();
 
             return userId;
         } catch (Exception e) {
