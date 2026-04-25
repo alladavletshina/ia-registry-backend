@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -74,23 +75,23 @@ class ThreatControllerTest {
 
     @Test
     void syncThreats_shouldTriggerSyncAndReturn200() throws Exception {
-        doNothing().when(fstecSyncService).syncThreats();
+        when(fstecSyncService.syncThreats()).thenReturn(true);
 
         mockMvc.perform(post("/api/assets/threats/sync")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Синхронизация с ФСТЭК успешно запущена. Проверьте логи для деталей."));
+                .andExpect(content().string("Синхронизация с ФСТЭК успешно выполнена. База угроз обновлена."));
 
         verify(fstecSyncService, times(1)).syncThreats();
     }
 
     @Test
     void syncThreats_whenException_shouldReturn500() throws Exception {
-        doThrow(new RuntimeException("Network error")).when(fstecSyncService).syncThreats();
+        when(fstecSyncService.syncThreats()).thenThrow(new RuntimeException("Network error"));
 
         mockMvc.perform(post("/api/assets/threats/sync")
                         .with(csrf()))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ошибка при синхронизации")));
+                .andExpect(content().string(containsString("Ошибка при синхронизации")));
     }
 }
