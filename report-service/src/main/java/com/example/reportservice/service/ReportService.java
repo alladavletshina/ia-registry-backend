@@ -9,6 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -73,6 +74,15 @@ public class ReportService {
         report.setByStatus(groupByStatus(assets));
         report.setByConfidentiality(groupByConfidentiality(assets));
         report.setGrowthTrend(buildGrowthTrend(assets, period));
+
+        // === Расчёт суммарного риска ===
+        BigDecimal totalRisk = assets.stream()
+                .map(AssetDTO::getLatestRisk)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        report.setTotalRisk(totalRisk);
+        // ========================================
+
         return report;
     }
 

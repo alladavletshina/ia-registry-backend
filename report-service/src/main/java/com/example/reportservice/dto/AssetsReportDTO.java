@@ -1,6 +1,8 @@
 package com.example.reportservice.dto;
 
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -9,6 +11,7 @@ public class AssetsReportDTO {
     private List<StatusCount> byStatus;
     private List<LevelCount> byConfidentiality;
     private List<MonthValue> growthTrend;
+    private BigDecimal totalRisk;
 
     @Data
     public static class CategoryCount {

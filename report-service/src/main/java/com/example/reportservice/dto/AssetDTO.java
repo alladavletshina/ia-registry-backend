@@ -1,6 +1,8 @@
 package com.example.reportservice.dto;
 
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,4 +18,5 @@ public class AssetDTO {
     private LocalDateTime createdAt;
     private String groupName;
     private String legalStatus;
+    private BigDecimal latestRisk;
 }
