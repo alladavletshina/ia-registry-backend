@@ -57,20 +57,19 @@ public class ThreatController {
     }
 
     @PostMapping("/sync")
-    @Operation(summary = "Запустить синхронизацию с БДУ ФСТЭК вручную")
     public ResponseEntity<String> syncThreats() {
         try {
             boolean success = fstecSyncService.syncThreats();
             if (success) {
-                return ResponseEntity.ok("Синхронизация с ФСТЭК успешно выполнена. База угроз обновлена.");
+                return ResponseEntity.ok("Синхронизация выполнена.");
             } else {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                         .body("Сервис временно недоступен. Попробуйте загрузить файл вручную через кнопку «Загрузить XLSX».");
             }
         } catch (Exception e) {
-            log.error("Исключение при синхронизации", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Ошибка при синхронизации: " + e.getMessage());
+            log.error("Ошибка синхронизации", e);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("Сервис временно недоступен. Попробуйте загрузить файл вручную.");
         }
     }
 
