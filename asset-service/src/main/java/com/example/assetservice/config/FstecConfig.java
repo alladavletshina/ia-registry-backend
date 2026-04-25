@@ -8,11 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "fstec")
 public class FstecConfig {
-
-    /*URL для скачивания файла с угрозами*/
     private String threatUrl;
-    /*"xlsx" или "ods"*/
     private String parserType;
-    /*cron-выражение для планировщика*/
     private String syncCron;
+    private int connectionTimeout = 10000;
+    private int readTimeout = 30000;
+    private String fallbackFilePath = "/thrlist.xlsx";
 }

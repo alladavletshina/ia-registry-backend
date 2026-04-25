@@ -12,8 +12,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/assets/threats")
@@ -59,6 +63,20 @@ public class ThreatController {
             return ResponseEntity.ok("Синхронизация с ФСТЭК успешно запущена. Проверьте логи для деталей.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Ошибка при синхронизации: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('admin')")
+    @Operation(summary = "Загрузить и синхронизировать угрозы из файла XLSX/ODS",
+            description = "Администратор может вручную загрузить файл угроз (например, свежую выгрузку с bdu.fstec.ru)")
+    public ResponseEntity<String> uploadThreatsFile(@RequestParam("file") MultipartFile file) {
+        try {
+            fstecSyncService.syncFromUploadedFile(file);
+            return ResponseEntity.ok("Файл успешно обработан, справочник угроз обновлён");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ошибка при обработке файла: " + e.getMessage());
         }
     }
 }
