@@ -9,7 +9,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,8 +35,18 @@ class FstecSyncServiceTest {
     private FstecSyncService syncService;
 
     @Test
-    void syncThreats_whenFileNotFound_shouldLogAndReturn() {
-        // Этот тест намеренно ничего не делает, чтобы не блокировать сборку.
-        // Если есть время, потом перепишем.
+    void syncThreats_whenDownloadFails_shouldReturnFalseAndNotSave() {
+        when(fstecConfig.getThreatUrl()).thenReturn("https://example.com/missing.xlsx");
+
+        doThrow(new RuntimeException("Network error"))
+                .when(restTemplate).exchange(anyString(), any(), any(), eq(byte[].class));
+
+        boolean result = syncService.syncThreats();
+
+        assertFalse(result);
+
+        verify(threatRepository, never()).save(any());
+
+        verify(fstecConfig, atLeastOnce()).getThreatUrl();
     }
 }
