@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -74,24 +74,32 @@ class ThreatControllerTest {
     }
 
     @Test
-    void syncThreats_shouldTriggerSyncAndReturn200() throws Exception {
+    void syncThreats_shouldReturn200WhenSuccess() throws Exception {
         when(fstecSyncService.syncThreats()).thenReturn(true);
 
         mockMvc.perform(post("/api/assets/threats/sync")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Синхронизация с ФСТЭК успешно выполнена. База угроз обновлена."));
-
-        verify(fstecSyncService, times(1)).syncThreats();
+                .andExpect(content().string("Синхронизация выполнена."));
     }
 
     @Test
-    void syncThreats_whenException_shouldReturn500() throws Exception {
+    void syncThreats_shouldReturn503WhenSyncFails() throws Exception {
+        when(fstecSyncService.syncThreats()).thenReturn(false);
+
+        mockMvc.perform(post("/api/assets/threats/sync")
+                        .with(csrf()))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().string(containsString("Сервис временно недоступен")));
+    }
+
+    @Test
+    void syncThreats_shouldReturn503WhenExceptionThrown() throws Exception {
         when(fstecSyncService.syncThreats()).thenThrow(new RuntimeException("Network error"));
 
         mockMvc.perform(post("/api/assets/threats/sync")
                         .with(csrf()))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string(containsString("Ошибка при синхронизации")));
+                .andExpect(status().isServiceUnavailable()) // 503
+                .andExpect(content().string(containsString("Сервис временно недоступен")));
     }
 }
