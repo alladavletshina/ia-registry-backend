@@ -33,8 +33,6 @@ class RiskCalculationServiceTest {
     @InjectMocks
     private RiskCalculationService riskCalculationService;
 
-    // ==================== Helper methods ====================
-
     private Asset createAsset(Long id, BigDecimal value, int weightC, int weightI, int weightA) {
         Asset asset = new Asset();
         asset.setId(id);
@@ -71,8 +69,6 @@ class RiskCalculationServiceTest {
         return at;
     }
 
-    // ==================== Tests ====================
-
     @Test
     void calculateRiskForAsset_noThreats_shouldReturnZeroRisk() {
         // given
@@ -95,7 +91,7 @@ class RiskCalculationServiceTest {
 
     @Test
     void calculateRiskForAsset_singleThreat_fullDamage() {
-        // given
+
         Asset asset = createAsset(1L, new BigDecimal("100000"), 1, 1, 1);
         Threat threat = createThreat(10L, true, true, true);
         BigDecimal probability = BigDecimal.ONE;
@@ -106,16 +102,14 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(BigDecimal.valueOf(100000));
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(new BigDecimal("100000"));
     }
 
     @Test
     void calculateRiskForAsset_singleThreat_partialProbability() {
-        // given
+
         Asset asset = createAsset(1L, new BigDecimal("100000"), 1, 1, 1);
         Threat threat = createThreat(10L, true, false, false);
         BigDecimal probability = new BigDecimal("0.5");
@@ -131,16 +125,14 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(expected);
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(expected);
     }
 
     @Test
     void calculateRiskForAsset_withMitigationEffect() {
-        // given
+
         Asset asset = createAsset(1L, new BigDecimal("100000"), 2, 1, 1);
         Threat threat = createThreat(10L, true, true, false);
         BigDecimal probability = new BigDecimal("0.8");
@@ -157,16 +149,14 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(expected);
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(expected);
     }
 
     @Test
     void calculateRiskForAsset_customFlagsOverrideThreatFlags() {
-        // given
+
         Asset asset = createAsset(1L, new BigDecimal("50000"), 1, 2, 3);
         Threat threat = createThreat(10L, true, false, true);
         AssetThreat assetThreat = createAssetThreat(asset, threat, BigDecimal.ONE,
@@ -181,16 +171,14 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(expected);
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(expected);
     }
 
     @Test
     void calculateRiskForAsset_multipleThreats_summedDamage() {
-        // given
+
         Asset asset = createAsset(1L, new BigDecimal("100000"), 1, 1, 1);
         Threat threat1 = createThreat(1L, true, false, false);
         Threat threat2 = createThreat(2L, false, true, false);
@@ -206,16 +194,14 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(expected);
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(expected);
     }
 
     @Test
     void calculateRiskForAsset_assetValueZero_shouldReturnZero() {
-        // given
+
         Asset asset = createAsset(1L, BigDecimal.ZERO, 1, 1, 1);
         Threat threat = createThreat(10L, true, true, true);
         AssetThreat assetThreat = createAssetThreat(asset, threat, BigDecimal.ONE, null, null, null, BigDecimal.ZERO);
@@ -225,10 +211,8 @@ class RiskCalculationServiceTest {
         savedRisk.setCalculatedRisk(BigDecimal.ZERO);
         when(riskRepository.save(any(Risk.class))).thenReturn(savedRisk);
 
-        // when
         Risk result = riskCalculationService.calculateRiskForAsset(asset);
 
-        // then
         assertThat(result.getCalculatedRisk()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 }

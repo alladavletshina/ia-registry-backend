@@ -21,7 +21,6 @@ public class AuditEventListener {
             auditService.saveAuditLog(event);
         } catch (Exception e) {
             log.error("Failed to save audit log", e);
-            // Можно добавить обработку ошибок (dead letter)
         }
     }
 }
