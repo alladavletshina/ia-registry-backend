@@ -33,7 +33,7 @@ public class NotificationService {
 
         UUID internalUserId;
         if (isAdmin(jwt)) {
-            internalUserId = keycloakId; // администратор использует свой Keycloak ID
+            internalUserId = keycloakId;
             log.debug("Admin user, using keycloakId as internal ID: {}", internalUserId);
         } else {
             try {
